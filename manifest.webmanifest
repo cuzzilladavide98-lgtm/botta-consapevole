@@ -1,0 +1,20 @@
+{
+  "name": "Botta Consapevole",
+  "short_name": "Botta",
+  "description": "Tracker consapevole del consumo: media giornaliera, livelli di tolleranza e protezione della sensibilità.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait",
+  "background_color": "#0d8f6e",
+  "theme_color": "#10b981",
+  "categories": ["health", "lifestyle", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}
