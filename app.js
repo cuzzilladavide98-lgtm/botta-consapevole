@@ -152,7 +152,6 @@ const els = {
   splash: $('#splash'),
   levelFlash: $('#levelFlash'),
   themeMeta: document.querySelector('meta[name="theme-color"]'),
-  soundBtn: $('#soundBtn'),
   dataBtn: $('#dataBtn'),
   historySheet: $('#historySheet'),
   backupSummary: $('#backupSummary'),
@@ -178,47 +177,17 @@ function announce(msg) { if (els.srLive) els.srLive.textContent = msg; }
 /* ---------------------------------------------------------------------
    FEEDBACK APTICO VISIVO — onda d'urto + particelle (Web Animations API)
    --------------------------------------------------------------------- */
-function tapBurst(clientX, clientY) {
-  if (REDUCED_MOTION) return;
-  const coreFx = els.tapFx;
-  const btn = els.tapBtn;
-  if (!coreFx || !btn) return;
-
-  // 1) Onda d'urto di luce (clippata nel disco)
-  const fxRect = coreFx.getBoundingClientRect();
-  const rx = (clientX || fxRect.left + fxRect.width / 2) - fxRect.left;
-  const ry = (clientY || fxRect.top + fxRect.height / 2) - fxRect.top;
-  const ripple = document.createElement('span');
-  ripple.className = 'ripple';
-  ripple.style.left = `${rx}px`;
-  ripple.style.top = `${ry}px`;
-  coreFx.appendChild(ripple);
-  ripple.animate(
-    [{ transform: 'translate3d(0,0,0) scale(0)', opacity: .6 },
-     { transform: 'translate3d(0,0,0) scale(11)', opacity: 0 }],
-    { duration: 620, easing: 'cubic-bezier(.25,1,.5,1)' }
-  ).onfinish = () => ripple.remove();
-
-  // 2) Particelle digitali che si propagano dal punto di tocco
-  const btnRect = btn.getBoundingClientRect();
-  const px = (clientX || btnRect.left + btnRect.width / 2) - btnRect.left;
-  const py = (clientY || btnRect.top + btnRect.height / 2) - btnRect.top;
-  const n = 10;
-  for (let i = 0; i < n; i++) {
-    const p = document.createElement('span');
-    p.className = 'particle';
-    p.style.left = `${px}px`;
-    p.style.top = `${py}px`;
-    p.style.zIndex = '7';
-    btn.appendChild(p);
-    const a = (Math.PI * 2 * i) / n + Math.random() * 0.5;
-    const dist = 46 + Math.random() * 60;
-    p.animate(
-      [{ transform: 'translate3d(0,0,0) scale(1)', opacity: 1 },
-       { transform: `translate3d(${Math.cos(a) * dist}px, ${Math.sin(a) * dist}px, 0) scale(.2)`, opacity: 0 }],
-      { duration: 560 + Math.random() * 260, easing: 'cubic-bezier(.25,1,.5,1)' }
-    ).onfinish = () => p.remove();
-  }
+function tapBurst() {
+  if (REDUCED_MOTION || !els.tapFx) return;
+  // Un singolo anello elegante che si espande dal quadrante (stile strumento)
+  const ring = document.createElement('span');
+  ring.className = 'tap-ring';
+  els.tapFx.appendChild(ring);
+  ring.animate(
+    [{ transform: 'scale(.6)', opacity: .8 },
+     { transform: 'scale(1.25)', opacity: 0 }],
+    { duration: 650, easing: 'cubic-bezier(.25,1,.5,1)' }
+  ).onfinish = () => ring.remove();
 }
 
 /* ---------------------------------------------------------------------
@@ -385,8 +354,7 @@ function renderHistory(s) {
    AZIONI
    --------------------------------------------------------------------- */
 function registraTocco(e) {
-  enableTilt();                 // primo gesto utente: abilita la parallasse (permesso iOS)
-  if (soundOn) Chiptune.play(); // riprende l'audio sul gesto utente (policy iOS)
+  Chiptune.play();              // colonna sonora fissa: parte/riprende al tocco (policy iOS)
   checkRollover(state);
   const ts = Date.now();
 
@@ -406,8 +374,7 @@ function registraTocco(e) {
   els.tapBtn.classList.remove('pop');
   void els.tapBtn.offsetWidth;
   els.tapBtn.classList.add('pop');
-  const fromPointer = e && e.detail > 0;
-  tapBurst(fromPointer ? e.clientX : 0, fromPointer ? e.clientY : 0);
+  tapBurst();
   haptic(12);
 
   render(state, { announceLevel: true });
@@ -458,32 +425,9 @@ function dismissSplash() {
 }
 
 /* ---------------------------------------------------------------------
-   COLONNA SONORA — toggle persistito (default spento; parte da un gesto)
+   COLONNA SONORA — fissa (nessun tasto): parte al primo tocco, poi è il
+   volume del telefono a decidere se si sente. Logica in audio.js.
    --------------------------------------------------------------------- */
-const SOUND_KEY = 'bottaConsapevole.sound';
-let soundOn = false;
-try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch {}
-
-function reflectSoundBtn() {
-  if (!els.soundBtn) return;
-  els.soundBtn.classList.toggle('on', soundOn);
-  els.soundBtn.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
-  els.soundBtn.setAttribute('aria-label', soundOn ? 'Disattiva la colonna sonora' : 'Attiva la colonna sonora');
-}
-
-async function toggleSound() {
-  soundOn = !soundOn;
-  try { localStorage.setItem(SOUND_KEY, soundOn ? '1' : '0'); } catch {}
-  reflectSoundBtn();
-  if (soundOn) {
-    Chiptune.setLevel(lastLevelKey || 'eccellente');
-    await Chiptune.play();
-    toast('Colonna sonora attiva');
-  } else {
-    Chiptune.stop();
-    toast('Colonna sonora in pausa');
-  }
-}
 
 /* ---------------------------------------------------------------------
    DATI E BACKUP — export / import (submenu / sheet)
@@ -587,9 +531,10 @@ render(state);
 els.tapBtn.addEventListener('click', registraTocco);
 els.undoBtn.addEventListener('click', annullaTocco);
 
-// Controlli: colonna sonora + dati/backup
-reflectSoundBtn();
-els.soundBtn.addEventListener('click', toggleSound);
+// Audio fisso: si avvia al primo tocco ovunque sullo schermo (richiesto da iOS)
+document.addEventListener('pointerdown', () => Chiptune.play(), { once: true });
+
+// Controlli: dati/backup
 els.dataBtn.addEventListener('click', openBackup);
 els.historySheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeSheet));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });

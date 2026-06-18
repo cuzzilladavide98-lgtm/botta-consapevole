@@ -2,162 +2,95 @@
 <html lang="it" data-level="eccellente">
 <head>
   <meta charset="UTF-8" />
-  <!-- viewport-fit=cover usa le safe-area del notch / home indicator. Zoom consentito
-       (accessibilità); il doppio-tap-zoom è neutralizzato da touch-action:manipulation. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Tracker consapevole del consumo: media giornaliera, livelli di tolleranza e protezione della sensibilità." />
-
   <title>Botta Consapevole</title>
 
-  <!-- ===== PWA / Web App Manifest ===== -->
   <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#0b3b2e" />
+  <meta name="theme-color" content="#07080b" />
 
-  <!-- ===== Apple / iOS standalone (immersivo, full-bleed) ===== -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Botta" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png" />
-  <!-- Launch screen nativa cucita sull'iPhone 13 mini (360×780 pt @3x = 1080×2340 px):
-       elimina il flash bianco al cold-start in modalità standalone. -->
   <link rel="apple-touch-startup-image"
         media="screen and (device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
         href="icons/startup-1080x2340.png" />
 
-  <!-- Sfondo critico inline: il primo frame non è MAI bianco (niente lampo all'avvio) -->
-  <style>html,body{background-color:#0a3a26}</style>
+  <!-- Sfondo critico inline: il primo frame non è MAI bianco -->
+  <style>html,body{background-color:#07080b}</style>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-level="eccellente">
 
-  <!-- ===== SCENERY: sfondo mesh vivo + decoro generativo ===== -->
-  <div class="scenery" aria-hidden="true">
-    <div class="mesh">
-      <span class="blob blob--a"></span>
-      <span class="blob blob--b"></span>
-      <span class="blob blob--c"></span>
-      <span class="blob blob--d"></span>
-    </div>
+  <div class="bg" aria-hidden="true"></div>
 
-    <div class="flora">
-      <span class="petal p1"></span><span class="petal p2"></span>
-      <span class="petal p3"></span><span class="petal p4"></span>
-      <span class="petal p5"></span><span class="petal p6"></span>
-      <span class="firefly f1"></span><span class="firefly f2"></span>
-      <span class="firefly f3"></span><span class="firefly f4"></span>
-      <span class="candy c1"></span><span class="candy c2"></span>
-      <span class="candy c3"></span>
-      <span class="glitchbar g1"></span><span class="glitchbar g2"></span>
-      <span class="glitchbar g3"></span>
-    </div>
-
-    <div class="grain"></div>
-    <div class="topscrim"></div>
-    <div class="vignette"></div>
-  </div>
-
-  <!-- Flash cinematografico al cambio livello -->
-  <div class="levelflash" id="levelFlash" aria-hidden="true"></div>
-
-  <!-- ===== APP ===== -->
   <main class="app" role="application" aria-label="Tracker consapevole">
 
-    <header class="topbar glass">
-      <div class="brand">
-        <span class="brand__dot"></span>
-        <span class="brand__name">Botta</span>
-      </div>
-      <div class="topbar__right">
-        <button id="soundBtn" class="iconbtn" type="button" aria-label="Attiva la colonna sonora" aria-pressed="false">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>
-            <path class="sw" d="M16 8.5a4.5 4.5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path class="sw" d="M18.6 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <button id="dataBtn" class="iconbtn" type="button" aria-label="Dati e backup">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
-          </svg>
-        </button>
-        <div class="precision" title="La stima si affina con i giorni di tracciamento">
-          <span class="precision__label" id="dayLabel">Giorno 1</span>
-          <div class="precision__bar"><i id="precisionFill" style="width:0%"></i></div>
-        </div>
-      </div>
+    <header class="topbar">
+      <span class="brand">BOTTA</span>
+      <button id="dataBtn" class="iconbtn" type="button" aria-label="Dati e backup">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+        </svg>
+      </button>
+      <span class="day">
+        <span id="dayLabel">Giorno 1</span>
+        <i class="prec"><i id="precisionFill"></i></i>
+      </span>
     </header>
 
-    <section class="levelhead">
-      <p class="levelhead__kicker">Livello attuale</p>
-      <h1 class="levelhead__name" id="levelName">Eccellente</h1>
-      <p class="levelhead__hint" id="levelHint">Sensibilità protetta. La botta è al massimo potenziale.</p>
+    <section class="hero">
+      <div class="level">
+        <p class="level__name" id="levelName">Eccellente</p>
+        <p class="level__hint" id="levelHint">Sensibilità protetta. La botta è al massimo potenziale.</p>
+      </div>
+
+      <div class="dialwrap">
+        <button id="tapBtn" class="dial" type="button" aria-label="Registra una sessione. Sessioni di oggi: 0">
+          <span class="dial__ticks" aria-hidden="true"></span>
+          <span class="dial__ring" aria-hidden="true"></span>
+          <span class="dial__fx" id="tapFx" aria-hidden="true"></span>
+          <span class="dial__count" id="todayCount">0</span>
+          <span class="dial__unit">tocca</span>
+        </button>
+      </div>
+
+      <p class="last" id="lastSession">Nessuna sessione ancora · inizia quando vuoi</p>
+
+      <div class="stats" aria-label="Statistiche">
+        <span><b id="avgValue">0.00</b><i>media/g</i></span>
+        <span class="sep"></span>
+        <span><b id="intervalValue">—</b><i>cadenza</i></span>
+        <span class="sep"></span>
+        <span><b id="totalValue">0</b><i>totale</i></span>
+      </div>
     </section>
 
-    <section class="stats" aria-label="Statistiche">
-      <div class="stat glass">
-        <span class="stat__value" id="avgValue">0.0</span>
-        <span class="stat__label">media / giorno</span>
+    <section class="bottom">
+      <div class="histline" aria-label="Storico giorni">
+        <div class="histline__head"><span>Storico</span><span id="historyRange"></span></div>
+        <div class="histline__bars" id="historyBars"></div>
       </div>
-      <div class="stat glass">
-        <span class="stat__value" id="intervalValue">—</span>
-        <span class="stat__label">cadenza media</span>
-      </div>
-      <div class="stat glass">
-        <span class="stat__value" id="totalValue">0</span>
-        <span class="stat__label">sessioni totali</span>
-      </div>
-    </section>
 
-    <section class="history glass" aria-label="Storico giorni">
-      <div class="history__head">
-        <span>Storico</span>
-        <span class="history__legend" id="historyRange"></span>
-      </div>
-      <div class="history__bars" id="historyBars"></div>
-    </section>
-
-    <!-- ZONA POLLICE -->
-    <section class="counter">
-      <p class="lastsession" id="lastSession">Nessuna sessione ancora · inizia quando vuoi</p>
-      <button id="tapBtn" class="tap" type="button" aria-label="Registra una sessione. Sessioni di oggi: 0">
-        <span class="tap__halo"></span>
-        <span class="tap__ring"></span>
-        <span class="tap__ring tap__ring--2"></span>
-        <span class="tap__core">
-          <span class="tap__gloss"></span>
-          <span class="tap__shine"></span>
-          <span class="tap__fx" id="tapFx"></span>
-          <span class="tap__count" id="todayCount">0</span>
-          <span class="tap__unit">tocca per +1</span>
-        </span>
-      </button>
-      <button id="undoBtn" class="undo glass" type="button" aria-label="Annulla l'ultima sessione" disabled>
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M4 9h11a5 5 0 0 1 0 10h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <button id="undoBtn" class="undo" type="button" aria-label="Annulla l'ultima sessione" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>
         </svg>
         Annulla
       </button>
-    </section>
 
-    <footer class="footnote">
-      <span id="syncNote">Archiviazione automatica a fine giornata · offline · dati solo sul telefono</span>
-    </footer>
+      <p class="foot">Archiviazione automatica · offline · dati sul telefono</p>
+    </section>
 
     <p class="sr-only" id="srLive" role="status" aria-live="polite"></p>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <div class="rotate-hint" aria-hidden="true">
-    <span class="rotate-hint__ico"></span>
-    Gira il telefono in verticale
-  </div>
-
-  <!-- ===== DATI E BACKUP (submenu / sheet a scomparsa) ===== -->
+  <!-- ===== DATI E BACKUP ===== -->
   <div class="sheet" id="historySheet" aria-hidden="true">
     <div class="sheet__backdrop" data-close></div>
     <div class="sheet__panel" role="dialog" aria-modal="true" aria-label="Dati e backup">
@@ -165,7 +98,7 @@
       <header class="sheet__head">
         <h2 class="sheet__title">Dati e backup</h2>
         <button class="iconbtn" type="button" aria-label="Chiudi" data-close>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
       </header>
 
@@ -194,13 +127,10 @@
     </div>
   </div>
 
-  <!-- ===== SPLASH DI LANCIO ===== -->
+  <!-- ===== SPLASH ===== -->
   <div class="splash" id="splash" aria-hidden="true">
-    <div class="splash__mark">
-      <span class="splash__ring"></span>
-      <span class="splash__dot"></span>
-    </div>
-    <span class="splash__word">Botta Consapevole</span>
+    <span class="splash__ring"></span>
+    <span class="splash__word">Botta</span>
   </div>
 
   <script src="app.js" type="module"></script>

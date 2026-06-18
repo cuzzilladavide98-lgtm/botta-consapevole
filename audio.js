@@ -86,7 +86,7 @@ let timer = null, nextTime = 0, step = 0;
 let current = THEMES.eccellente, pending = null;
 let running = false, muted = true;
 
-const LOOKAHEAD_MS = 25, AHEAD = 0.14;
+const LOOKAHEAD_MS = 40, AHEAD = 0.35;   // finestra ampia: niente scatti anche se il main thread è impegnato
 
 function ensureCtx() {
   if (ctx) return ctx;
