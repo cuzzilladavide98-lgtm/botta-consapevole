@@ -153,12 +153,12 @@ const els = {
   levelFlash: $('#levelFlash'),
   themeMeta: document.querySelector('meta[name="theme-color"]'),
   soundBtn: $('#soundBtn'),
-  historyBtn: $('#historyBtn'),
-  historyCard: $('#historyCard'),
+  dataBtn: $('#dataBtn'),
   historySheet: $('#historySheet'),
-  historySummary: $('#historySummary'),
-  historyChartFull: $('#historyChartFull'),
-  historyList: $('#historyList'),
+  backupSummary: $('#backupSummary'),
+  importText: $('#importText'),
+  importFile: $('#importFile'),
+  backupStatus: $('#backupStatus'),
 };
 
 let toastTimer = null;
@@ -486,68 +486,92 @@ async function toggleSound() {
 }
 
 /* ---------------------------------------------------------------------
-   STORICO — submenu / sheet a scomparsa
+   DATI E BACKUP — export / import (submenu / sheet)
    --------------------------------------------------------------------- */
-function fmtDateIt(key) {
-  return parseKey(key).toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' });
-}
-function bestZeroStreak(series) {
-  let best = 0, cur = 0;
-  for (const d of series) { if (d.count === 0) { cur++; if (cur > best) best = cur; } else cur = 0; }
-  return best;
-}
-function renderHistorySheet() {
-  const stats = computeStats(state);
-  const series = [...state.history, { date: state.todayKey, count: state.todayCount }];
+function setBackupStatus(msg) { if (els.backupStatus) els.backupStatus.textContent = msg || ''; }
 
-  // Riepilogo
+function backupText() {
+  return JSON.stringify({ app: 'botta-consapevole', schema: STATE_VERSION, exportedAt: new Date().toISOString(), state }, null, 2);
+}
+
+async function exportShare() {
+  const text = backupText();
+  const fname = `botta-backup-${dateKey(new Date())}.json`;
+  try {
+    const file = new File([text], fname, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Backup Botta Consapevole' });
+      setBackupStatus('Backup condiviso ✓');
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    setBackupStatus('File scaricato ✓');
+  } catch { setBackupStatus('Usa "Copia testo" e salvalo nelle Note'); }
+}
+
+async function exportCopy() {
+  const text = backupText();
+  try {
+    await navigator.clipboard.writeText(text);
+    setBackupStatus('Backup copiato negli appunti ✓');
+  } catch {
+    els.importText.value = text; els.importText.focus(); els.importText.select();
+    setBackupStatus('Seleziona e copia il testo qui sopra');
+  }
+}
+
+function applyImport(text) {
+  let data;
+  try { data = JSON.parse((text || '').trim()); }
+  catch { setBackupStatus('Testo non valido (JSON)'); return; }
+  const st = data && data.state ? data.state : data;     // accetta sia {state:…} sia lo stato grezzo
+  if (!st || typeof st.todayKey !== 'string' || !Array.isArray(st.history)) {
+    setBackupStatus('Backup non riconosciuto'); return;
+  }
+  if (!window.confirm('Ripristinare questo backup? I dati attuali sul telefono verranno sostituiti.')) return;
+  const clean = Object.assign(freshState(), st);
+  clean.version = STATE_VERSION;
+  clean.todayTaps = Array.isArray(clean.todayTaps) ? clean.todayTaps : [];
+  clean.todayCount = Number(clean.todayCount) || 0;
+  for (const k of Object.keys(state)) delete state[k];
+  Object.assign(state, clean);
+  checkRollover(state);
+  saveState(state);
+  lastLevelKey = null;
+  render(state);
+  setBackupStatus('Dati ripristinati ✓');
+  toast('Backup ripristinato');
+}
+
+function renderBackupSummary() {
+  const stats = computeStats(state);
   const cards = [
-    [`${stats.giorniTotali}`, 'giorni tracciati'],
+    [`${stats.giorniTotali}`, 'giorni'],
+    [`${stats.totaleSessioni}`, 'sessioni'],
     [stats.mediaGiornaliera.toFixed(2), 'media / giorno'],
-    [`${stats.totaleSessioni}`, 'sessioni totali'],
-    [`${bestZeroStreak(series)}g`, 'miglior pausa'],
+    [lastLevelKey || '—', 'livello'],
   ];
-  els.historySummary.innerHTML = '';
+  els.backupSummary.innerHTML = '';
   for (const [v, l] of cards) {
     const c = document.createElement('div'); c.className = 'sheet__stat';
     const b = document.createElement('b'); b.textContent = v;
     const sp = document.createElement('span'); sp.textContent = l;
-    c.append(b, sp); els.historySummary.appendChild(c);
-  }
-
-  // Grafico (ultimi 14 giorni)
-  const chart = series.slice(-14);
-  const cmax = Math.max(1, ...chart.map((d) => d.count));
-  els.historyChartFull.innerHTML = '';
-  for (const d of chart) {
-    const bar = document.createElement('div');
-    bar.className = 'hbar' + (d.date === state.todayKey ? ' hbar--today' : '');
-    const fill = document.createElement('div'); fill.className = 'hbar__fill';
-    fill.style.height = `${Math.max(4, (d.count / cmax) * 100)}%`;
-    bar.appendChild(fill); bar.title = `${d.date}: ${d.count}`;
-    els.historyChartFull.appendChild(bar);
-  }
-
-  // Elenco giorni (dal più recente)
-  const lmax = Math.max(1, ...series.map((d) => d.count));
-  els.historyList.innerHTML = '';
-  for (const d of [...series].reverse()) {
-    const li = document.createElement('li');
-    li.className = 'dayrow' + (d.date === state.todayKey ? ' dayrow--today' : '');
-    const date = document.createElement('span'); date.className = 'dayrow__date'; date.textContent = fmtDateIt(d.date);
-    const bar = document.createElement('span'); bar.className = 'dayrow__bar';
-    const i = document.createElement('i'); i.style.width = `${Math.round((d.count / lmax) * 100)}%`; bar.appendChild(i);
-    const n = document.createElement('span'); n.className = 'dayrow__n'; n.textContent = String(d.count);
-    li.append(date, bar, n);
-    els.historyList.appendChild(li);
+    c.append(b, sp); els.backupSummary.appendChild(c);
   }
 }
-function openHistory() {
-  renderHistorySheet();
+
+function openBackup() {
+  renderBackupSummary();
+  setBackupStatus('');
   els.historySheet.setAttribute('aria-hidden', 'false');
   haptic(8);
 }
-function closeHistory() {
+function closeSheet() {
   els.historySheet.setAttribute('aria-hidden', 'true');
 }
 
@@ -563,14 +587,22 @@ render(state);
 els.tapBtn.addEventListener('click', registraTocco);
 els.undoBtn.addEventListener('click', annullaTocco);
 
-// Controlli: colonna sonora + storico
+// Controlli: colonna sonora + dati/backup
 reflectSoundBtn();
 els.soundBtn.addEventListener('click', toggleSound);
-els.historyBtn.addEventListener('click', openHistory);
-els.historyCard.addEventListener('click', openHistory);
-els.historyCard.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHistory(); } });
-els.historySheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeHistory));
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHistory(); });
+els.dataBtn.addEventListener('click', openBackup);
+els.historySheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeSheet));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+document.getElementById('btnExportShare').addEventListener('click', exportShare);
+document.getElementById('btnExportCopy').addEventListener('click', exportCopy);
+document.getElementById('btnRestore').addEventListener('click', () => applyImport(els.importText.value));
+els.importFile.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { els.importText.value = String(r.result || ''); setBackupStatus('File caricato — premi "Ripristina dati"'); };
+  r.readAsText(f);
+});
 
 setInterval(tickRollover, 60 * 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tickRollover(); });
@@ -586,10 +618,10 @@ if (REDUCED_MOTION) {
   const start = performance.now();
   window.addEventListener('load', () => {
     const elapsed = performance.now() - start;
-    setTimeout(dismissSplash, Math.max(0, 1000 - elapsed));
+    setTimeout(dismissSplash, Math.max(0, 650 - elapsed));
   });
   // Fallback se 'load' è già passato
-  setTimeout(dismissSplash, 2200);
+  setTimeout(dismissSplash, 1500);
 }
 
 /* ---------------------------------------------------------------------

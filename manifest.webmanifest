@@ -9,7 +9,7 @@
   "display": "standalone",
   "display_override": ["standalone", "fullscreen"],
   "orientation": "portrait",
-  "background_color": "#0d8f6e",
+  "background_color": "#0a3a26",
   "theme_color": "#10b981",
   "categories": ["health", "lifestyle", "utilities"],
   "icons": [

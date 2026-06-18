@@ -263,3 +263,32 @@ export const Chiptune = {
     if (!muted) rampMaster(0.5 * (theme.gain || 1), 0.9);
   },
 };
+
+/* ---------------------------------------------------------------------
+   Pausa PULITA quando l'app va in background o si chiude.
+   Senza questo, una nota lunga (pad/lead detunato) resterebbe "appesa"
+   mentre il contesto viene sospeso → suono stonato all'uscita.
+   --------------------------------------------------------------------- */
+function pauseForBackground() {
+  if (!ctx) return;
+  try {
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(0.0001, ctx.currentTime);   // silenzio immediato, niente coda
+    ctx.suspend();
+  } catch {}
+}
+function resumeFromBackground() {
+  if (!ctx || muted || !running) return;
+  ctx.resume().then(() => {
+    nextTime = ctx.currentTime + 0.06;                     // evita raffica di note "di recupero"
+    rampMaster(0.5 * (current.gain || 1), 0.35);
+  }).catch(() => {});
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pauseForBackground(); else resumeFromBackground();
+  });
+  window.addEventListener('pagehide', pauseForBackground);
+  window.addEventListener('freeze', pauseForBackground);   // Page Lifecycle API
+  window.addEventListener('blur', () => { if (document.hidden) pauseForBackground(); });
+}

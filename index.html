@@ -26,6 +26,8 @@
         media="screen and (device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
         href="icons/startup-1080x2340.png" />
 
+  <!-- Sfondo critico inline: il primo frame non è MAI bianco (niente lampo all'avvio) -->
+  <style>html,body{background-color:#0a3a26}</style>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-level="eccellente">
@@ -76,9 +78,9 @@
             <line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </button>
-        <button id="historyBtn" class="iconbtn" type="button" aria-label="Apri lo storico">
+        <button id="dataBtn" class="iconbtn" type="button" aria-label="Dati e backup">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
           </svg>
         </button>
         <div class="precision" title="La stima si affina con i giorni di tracciamento">
@@ -109,10 +111,10 @@
       </div>
     </section>
 
-    <section class="history glass" id="historyCard" role="button" tabindex="0" aria-label="Apri lo storico completo">
+    <section class="history glass" aria-label="Storico giorni">
       <div class="history__head">
         <span>Storico</span>
-        <span class="history__more"><span class="history__legend" id="historyRange"></span><i class="chev" aria-hidden="true">›</i></span>
+        <span class="history__legend" id="historyRange"></span>
       </div>
       <div class="history__bars" id="historyBars"></div>
     </section>
@@ -155,20 +157,40 @@
     Gira il telefono in verticale
   </div>
 
-  <!-- ===== STORICO (submenu / sheet a scomparsa) ===== -->
+  <!-- ===== DATI E BACKUP (submenu / sheet a scomparsa) ===== -->
   <div class="sheet" id="historySheet" aria-hidden="true">
     <div class="sheet__backdrop" data-close></div>
-    <div class="sheet__panel" role="dialog" aria-modal="true" aria-label="Storico">
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-label="Dati e backup">
       <div class="sheet__grab" data-close></div>
       <header class="sheet__head">
-        <h2 class="sheet__title">Storico</h2>
-        <button class="iconbtn" id="sheetClose" type="button" aria-label="Chiudi" data-close>
+        <h2 class="sheet__title">Dati e backup</h2>
+        <button class="iconbtn" type="button" aria-label="Chiudi" data-close>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>
       </header>
-      <div class="sheet__summary" id="historySummary"></div>
-      <div class="sheet__chart" id="historyChartFull"></div>
-      <ul class="sheet__list" id="historyList"></ul>
+
+      <div class="sheet__summary" id="backupSummary"></div>
+
+      <div class="sheet__sect">
+        <p class="sheet__lbl">Esporta</p>
+        <div class="btnrow">
+          <button class="bigbtn" id="btnExportShare" type="button">Condividi / Salva</button>
+          <button class="bigbtn bigbtn--ghost" id="btnExportCopy" type="button">Copia testo</button>
+        </div>
+        <p class="sheet__note">Salva il file di backup in un posto sicuro (app File, Note, email).</p>
+      </div>
+
+      <div class="sheet__sect">
+        <p class="sheet__lbl">Importa</p>
+        <label class="filelabel">Scegli un file di backup
+          <input type="file" id="importFile" accept="application/json,.json,.txt" hidden />
+        </label>
+        <textarea id="importText" class="importbox" placeholder="…oppure incolla qui il testo del backup" spellcheck="false"></textarea>
+        <button class="bigbtn bigbtn--danger" id="btnRestore" type="button">Ripristina dati</button>
+        <p class="sheet__note">Sostituisce i dati attuali sul telefono.</p>
+      </div>
+
+      <p class="sheet__status" id="backupStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
 
