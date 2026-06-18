@@ -1,64 +1,56 @@
-/* =====================================================================
-   BOTTA CONSAPEVOLE — Service Worker
-   Strategia: cache-first per l'app shell (offline + avvio istantaneo),
-   con aggiornamento in background (stale-while-revalidate) per le risorse.
-   ===================================================================== */
+const CACHE = 'sentiero-v5';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png', 'splash-1290x2796.png', 'splash-1179x2556.png', 'splash-1170x2532.png', 'splash-1125x2436.png', 'splash-828x1792.png', 'splash-750x1334.png'];
 
-const CACHE = 'botta-consapevole-v8';
-
-// Percorsi relativi: l'app funziona anche servita da una sottocartella.
-const APP_SHELL = [
-  './',
-  './index.html',
-  './styles.css',
-  './app.js',
-  './audio.js',
-  './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png',
-  './icons/favicon-64.png',
-  './icons/startup-1080x2340.png',
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
-  );
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  if (request.method !== 'GET') return;
+self.addEventListener('fetch', e => {
+  const url = e.request.url;
+  if (url.includes('api.anthropic.com')) return; // l'IA va sempre in rete
 
-  // Navigazioni: prova rete, fallback a index.html dalla cache (offline SPA).
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() => caches.match('./index.html'))
+  // App shell: network-first, così le nuove versioni arrivano da sole; offline si usa la cache.
+  if (e.request.mode === 'navigate' || url.endsWith('index.html')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return res;
+      }).catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
     );
     return;
   }
 
-  // Asset: cache-first + revalidate in background.
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((res) => {
-          if (res && res.status === 200 && res.type === 'basic') {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(request, copy));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return 
+  // Risorse statiche: cache-first con aggiornamento in background.
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      const net = fetch(e.request).then(res => {
+        if (res.ok && e.request.method === 'GET') {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || net;
+    })
+  );
+});
+
+// Tocco sulla notifica: apre o porta in primo piano l'app.
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const open = list.find(c => 'focus' in c);
+      return open ? open.focus() : clients.openWindow('./');
+    })
+  );
+});

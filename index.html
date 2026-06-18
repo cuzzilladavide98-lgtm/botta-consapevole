@@ -1,138 +1,1606 @@
 <!DOCTYPE html>
-<html lang="it" data-level="eccellente">
+<html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="Tracker consapevole del consumo: media giornaliera, livelli di tolleranza e protezione della sensibilità." />
-  <title>Botta Consapevole</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Sentiero — Diario vocale</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Sentiero">
+<meta name="theme-color" content="#000000">
+<!-- splash screen iOS: nere con enso, così il primo fotogramma combacia con l'app (niente lampo bianco) -->
+<link rel="apple-touch-startup-image" href="splash-1290x2796.png" media="(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="splash-1179x2556.png" media="(device-width:393px) and (device-height:852px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)">
+<link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2)">
+<link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2)">
+<meta name="color-scheme" content="dark">
+<style>
+/* ═══════════════════════════════════════════════════════
+   SENTIERO v19 — "Bussola"
+   Una regola: togliere. Nero, tipografia, vuoto, un solo fuoco.
+   Nessun contenitore. Nessun bordo. Nessun gradiente di superficie.
+   ═══════════════════════════════════════════════════════ */
 
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#07080b" />
+:root{
+  --bg:#000000;
+  --t1:#F5F2EA;          /* testo primario */
+  --t2:rgba(245,242,234,.55);
+  --t3:rgba(245,242,234,.30);
+  --accent:#E8A84C;      /* un solo accento, usato con parsimonia */
+  --jade:#7FB8A4;
+  --ember:#D9744B;
+  --safe-top:env(safe-area-inset-top);
+  --safe-bot:env(safe-area-inset-bottom);
+  --serif:"New York","Iowan Old Style",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--t1);
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  padding-top:var(--safe-top);overscroll-behavior:none;
+  letter-spacing:-.01em;
+}
+button,.item,.chk,.sw,.days button,#mic{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#live[contenteditable]{-webkit-user-select:text;user-select:text}
 
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Botta" />
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png" />
-  <link rel="apple-touch-startup-image"
-        media="screen and (device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
-        href="icons/startup-1080x2340.png" />
+/* niente sfondi decorativi: spariscono del tutto */
+#bg,#watermark,#grain,#fx,#flash{display:none !important}
 
-  <!-- Sfondo critico inline: il primo frame non è MAI bianco -->
-  <style>html,body{background-color:#07080b}</style>
-  <link rel="stylesheet" href="styles.css" />
+#app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+main{flex:1;padding:0 28px 132px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* ── testata: solo testo, molto spazio ── */
+/* ── testata: la data è il titolo, sospesa con spazio ── */
+header{padding:14px 28px 0}
+.hd-row{display:flex;align-items:flex-start;justify-content:space-between;min-height:44px}
+#dateline{
+  font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.15;
+  letter-spacing:-.02em;color:var(--t1);text-transform:lowercase;max-width:78%;
+}
+#btn-pin{border:none;background:none;color:var(--t3);width:44px;height:44px;flex:none;
+  display:flex;align-items:center;justify-content:center;transition:color .2s,transform .15s}
+#btn-pin:active{color:var(--accent);transform:scale(1.15)}
+
+/* ════════ ENSO: l'unico oggetto, sospeso nel nero ════════ */
+#mic-wrap{display:flex;flex-direction:column;align-items:center;padding:40px 0 28px;position:relative}
+.mist,.ripple,#seal-dot{display:none}   /* via tutti gli orpelli intorno */
+#mic{width:236px;height:236px;border:none;background:transparent;position:relative}
+#mic svg{width:100%;height:100%;display:block;overflow:visible}
+.ring-track{fill:none;stroke:rgba(245,242,234,.07);stroke-width:2.5}
+.enso{
+  fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;
+  stroke-dasharray:540;stroke-dashoffset:500;
+  transition:stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1),stroke .4s;
+}
+.mic-glyph{fill:var(--t1);transition:fill .3s}
+#mic.rec .enso{stroke:var(--ember);stroke-width:3}
+#mic.rec .mic-glyph{fill:var(--ember)}
+#mic.arming .enso{stroke:var(--accent)}
+#mic.arming .mic-glyph,#mic.arming .enso{animation:pulse 1.4s ease-in-out infinite}
+#mic.sealed .enso{stroke-dashoffset:0 !important}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+#mic-label{margin-top:22px;font-size:15px;color:var(--t2);text-align:center;min-height:20px;font-weight:400;letter-spacing:0}
+#ring-count{font-size:12px;color:var(--t3);margin-top:6px;letter-spacing:.04em}
+
+#live{width:100%;margin-top:22px;font-family:var(--serif);font-size:18px;line-height:1.6;
+  color:var(--t1);display:none;text-align:center}
+#live.show{display:block}
+#live em{color:var(--t3);font-style:italic}
+#live.distill{animation:pulse 1.6s ease-in-out infinite;color:var(--accent)}
+
+/* azioni: testo, non bottoni pesanti */
+.btn-row{display:flex;gap:0;margin-top:24px;width:100%;justify-content:center}
+button.act{
+  flex:0 0 auto;padding:12px 28px;border:none;background:none;
+  color:var(--t2);font-size:16px;font-weight:500;letter-spacing:0;
+  transition:opacity .15s,transform .15s;
+}
+button.act.primary{color:var(--accent);font-weight:600}
+button.act:active{opacity:.5;transform:scale(.97)}
+
+/* ════════ liste: righe di testo nel vuoto, niente card ════════ */
+section{margin-top:38px}
+.sec-head{font-size:13px;font-weight:600;color:var(--t3);letter-spacing:.02em;margin:0 0 4px;text-transform:lowercase}
+.group{background:none;border:none;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.group:empty{display:none}
+
+.item{display:flex;align-items:center;gap:16px;padding:16px 0;border:none;position:relative;background:none}
+.item:not(:last-child){border-bottom:.5px solid rgba(245,242,234,.07)}
+.item:active{opacity:.6}
+
+/* priorità: nessun blocco colorato. Un punto piccolo, discreto. */
+.item .prio{flex:none;width:6px;height:6px;border-radius:50%;background:var(--t3)}
+.prio-0{display:none}
+.prio-1{background:var(--ember)}
+.prio-2{background:var(--accent)}
+.prio-3{background:var(--t3)}
+
+/* spunta: anello sottile, riempimento pulito */
+.item .chk{flex:none;width:26px;height:26px;border-radius:50%;
+  border:1.5px solid rgba(245,242,234,.25);background:transparent;position:relative;
+  transition:border-color .2s,background .25s}
+.item .chk::after{content:'';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  width:11px;height:6px;margin:auto;border-left:1.5px solid var(--bg);border-bottom:1.5px solid var(--bg);
+  transform:rotate(-45deg) scale(0);transform-origin:center;margin-top:9px;
+  transition:transform .25s cubic-bezier(.34,1.6,.64,1);opacity:0}
+.item.done .chk{background:var(--jade);border-color:var(--jade)}
+.item.done .chk::after{transform:rotate(-45deg) scale(1);opacity:1}
+
+.item .txt{flex:1;font-size:17px;line-height:1.4;color:var(--t1);font-weight:400;position:relative}
+.item.done .txt{color:var(--t3)}
+.item .meta{display:block;font-size:13px;color:var(--t3);margin-top:3px;font-weight:400}
+.item .meta.over{color:var(--ember)}
+.item .meta.soon{color:var(--accent)}
+.item .del{flex:none;border:none;background:none;color:var(--t3);font-size:20px;
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;transition:opacity .15s}
+.item .del:active{opacity:.4}
+.item.future{opacity:.4}
+.item.leaving{animation:leave .45s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes leave{0%{opacity:1;max-height:70px}100%{opacity:0;max-height:0;padding-top:0;padding-bottom:0}}
+.empty{font-family:var(--serif);font-style:italic;color:var(--t3);font-size:16px;padding:8px 0;line-height:1.6}
+
+/* ════════ diario: prosa, niente lastre ════════ */
+.diary-font{font-family:var(--serif)}
+.entry{padding:22px 0;border-bottom:.5px solid rgba(245,242,234,.07)}
+.entry time{font-family:var(--sans);font-size:12px;color:var(--t3);letter-spacing:.04em}
+.entry time a.posa{color:var(--jade);text-decoration:none}
+.entry p{margin-top:8px;font-size:18px;line-height:1.75;color:var(--t1)}
+.entry .tags{margin-top:10px;font-size:13px;line-height:1.6;font-family:var(--sans)}
+.entry .tags.born-t{color:var(--accent)}
+.entry .tags.done-t{color:var(--t3)}
+
+/* ════════ impostazioni: righe pulite ════════ */
+.switchrow{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:.5px solid rgba(245,242,234,.07)}
+.group .switchrow:last-child{border-bottom:none}
+.switchrow span{font-size:17px;color:var(--t1)}
+label{display:block;font-size:13px;color:var(--t3);margin:16px 0 6px}
+input[type=text],input[type=password],input[type=time]{
+  width:100%;padding:14px 0;border:none;border-bottom:.5px solid rgba(245,242,234,.15);
+  background:none;color:var(--t1);font-size:17px;border-radius:0}
+input:focus{outline:none;border-bottom-color:var(--accent)}
+
+/* switch: minimale iOS */
+.sw{flex:none;width:50px;height:30px;border-radius:99px;background:rgba(245,242,234,.16);position:relative;transition:background .25s}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .25s cubic-bezier(.34,1.3,.64,1)}
+.sw.on{background:var(--jade)}
+.sw.on::after{transform:translateX(20px)}
+
+/* segmented: testo, sottolineato l'attivo */
+.seg{display:flex;gap:20px;background:none;border:none}
+.seg button{padding:6px 0;border:none;background:none;color:var(--t3);font-size:15px;font-weight:500;position:relative}
+.seg button.on{color:var(--accent)}
+
+.days{display:flex;gap:8px;margin-top:8px}
+.days button{flex:1;height:44px;border-radius:0;border:none;border-bottom:1.5px solid rgba(245,242,234,.12);
+  background:none;color:var(--t3);font-size:15px;font-weight:600}
+.days button.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+.note{font-size:13px;color:var(--t3);line-height:1.55;margin-top:8px}
+
+/* ════════ nav: testo, l'attivo in accento. Nessuna capsula. ════════ */
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;z-index:20;
+  background:linear-gradient(0deg,#000 55%,transparent);
+  padding:18px 0 calc(var(--safe-bot) + 14px);pointer-events:none}
+nav .inner{display:flex;gap:8px;pointer-events:auto}
+nav button{padding:8px 22px;border:none;background:none;color:var(--t3);
+  font-size:13px;font-weight:500;letter-spacing:0;transition:color .2s}
+nav button.on{color:var(--t1)}
+nav button .ico{display:block;font-size:20px;margin-bottom:3px;opacity:.9}
+nav button.on .ico{color:var(--accent)}
+
+/* ════════ toast: testo che appare, niente pillola pesante ════════ */
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(8px);
+  background:rgba(20,20,20,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  color:var(--t1);padding:12px 22px;border-radius:99px;font-size:14px;
+  opacity:0;pointer-events:none;z-index:50;max-width:84%;text-align:center;
+  transition:opacity .25s,transform .3s cubic-bezier(.34,1.3,.64,1)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hidden{display:none !important}
+
+/* ════════ parola combo: tipografia sospesa, sobria ════════ */
+#word-stage{position:fixed;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:40}
+.float-word{position:absolute;font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:46px;color:var(--t1);animation:fw 1.1s cubic-bezier(.22,1,.36,1) forwards}
+.float-word.lv4{color:var(--accent)}
+.float-word.lv5{color:var(--ember);font-size:54px}
+.float-word.lv6{color:var(--accent);font-size:62px}
+.fw-word{display:inline-flex;white-space:pre}
+.fw-l,.fw-ghost,.fw-ring{display:inline-block}
+.fw-ghost,.fw-ring{display:none}  /* via gli effetti extra: solo la parola */
+@keyframes fw{0%{opacity:0;transform:scale(.8) translateY(16px)}18%{opacity:1;transform:scale(1.04)}30%{transform:scale(1)}72%{opacity:1}100%{opacity:0;transform:translateY(-60px)}}
+
+/* ════════ onboarding: nero, enso, una frase ════════ */
+#onboard{position:fixed;inset:0;z-index:110;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:40px}
+.ob-inner{max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;background:none;border:none;box-shadow:none}
+.ob-enso{width:88px;height:88px;margin-bottom:30px}
+.ob-stroke{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;animation:introsvg 1.2s cubic-bezier(.4,0,.2,1) .1s forwards}
+.ob-title{font-family:var(--serif);font-weight:400;font-size:32px;letter-spacing:.02em;color:var(--t1);margin-bottom:16px;text-transform:lowercase}
+.ob-sub{font-family:var(--serif);font-size:17px;line-height:1.65;color:var(--t2);margin-bottom:40px}
+.ob-go{border:none;background:none;color:var(--accent);font-size:18px;font-weight:600;padding:12px 32px;transition:opacity .15s,transform .15s}
+.ob-go:active{opacity:.5;transform:scale(.96)}
+.ob-note{font-size:13px;color:var(--t3);line-height:1.5;margin-top:24px;min-height:18px}
+
+/* ════════ apertura ════════ */
+#app-intro{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+/* l'enso ha la stessa scala della splash nativa: ~32% del lato minore di diametro */
+#app-intro svg{width:32vmin;height:32vmin;max-width:236px;max-height:236px}
+#app-intro .intro-track{opacity:0}
+#app-intro .intro-enso{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;
+  animation:introsvg 1.1s cubic-bezier(.4,0,.2,1) .25s forwards}
+#app-intro .intro-glyph{opacity:0;animation:introglyph .5s ease-out .15s forwards}
+#app-intro .intro-name{font-family:var(--serif);font-style:italic;font-size:22px;letter-spacing:.2em;
+  color:var(--t1);opacity:0;text-transform:lowercase;margin-left:.2em;
+  animation:introname .5s ease-out 1.1s forwards}
+/* uscita: il nome svanisce, poi l'intero intro fa una lieve dissolvenza lasciando l'app già montata sotto */
+#app-intro.leaving .intro-name{animation:nameout .35s ease forwards}
+#app-intro.leaving{animation:introexit .5s cubic-bezier(.4,0,.2,1) .2s forwards}
+
+@keyframes introsvg{0%{stroke-dashoffset:503}100%{stroke-dashoffset:40}}
+@keyframes introglyph{from{opacity:0;transform:translate(100px,100px) scale(.9)}to{opacity:1;transform:translate(100px,100px) scale(1)}}
+@keyframes introname{from{opacity:0;transform:translateY(8px)}to{opacity:.9;transform:none}}
+@keyframes nameout{to{opacity:0;transform:translateY(-6px)}}
+@keyframes introexit{to{opacity:0}}
+@keyframes born{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+@keyframes tabin{from{opacity:0}to{opacity:1}}
+.item.born{animation:born .5s cubic-bezier(.22,1,.36,1) backwards}
+.tab-in{animation:tabin .3s ease}
+.inkdot{display:none}
+body.shake,body.shake-big{animation:none}  /* via lo shake: stona col minimalismo */
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
+}
+</style>
 </head>
-<body data-level="eccellente">
-
-  <div class="bg" aria-hidden="true"></div>
-
-  <main class="app" role="application" aria-label="Tracker consapevole">
-
-    <header class="topbar">
-      <span class="brand">BOTTA</span>
-      <button id="dataBtn" class="iconbtn" type="button" aria-label="Dati e backup">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
-        </svg>
+<body>
+<div id="bg"></div>
+<div id="watermark"></div>
+<div id="grain"></div>
+<div id="edge-top"></div>
+<div id="edge-bot"></div>
+<div id="app-intro">
+  <svg viewBox="0 0 200 200" aria-hidden="true">
+    <circle class="intro-track" fill="none" stroke="rgba(245,242,234,.07)" stroke-width="2.5" cx="100" cy="100" r="80"/>
+    <circle class="intro-enso" cx="100" cy="100" r="80"
+      transform="rotate(-100 100 100)"
+      stroke-dasharray="503" stroke-dashoffset="503"/>
+    <g class="intro-glyph" fill="#F5F2EA" transform="translate(100 100)">
+      <rect x="-9" y="-32" width="18" height="38" rx="9"/>
+      <path d="M -20 -5 a 20 20 0 0 0 40 0 h 6 a 26 26 0 0 1 -23 25.5 V 32 h 11 v 7 H -15 v -7 h 11 V 20.5 A 26 26 0 0 1 -26 -5 Z"/>
+    </g>
+  </svg>
+  <div class="intro-name">sentiero</div>
+</div>
+<div id="onboard" class="hidden">
+  <div class="ob-inner">
+    <svg class="ob-enso" viewBox="0 0 200 200" aria-hidden="true">
+      <circle fill="none" stroke="rgba(255,255,255,.06)" stroke-width="7" cx="100" cy="100" r="80"/>
+      <circle class="ob-stroke" cx="100" cy="100" r="80" transform="rotate(-100 100 100)" stroke-dasharray="503" stroke-dashoffset="503"/>
+    </svg>
+    <h1 class="ob-title">sentiero</h1>
+    <p class="ob-sub">Parla. Le tue parole diventano quest da compiere, e ogni giorno si chiude come un cerchio.</p>
+    <button class="ob-go" id="ob-go">Inizia</button>
+    <p class="ob-note" id="ob-note"></p>
+  </div>
+</div>
+<div id="app">
+  <header>
+    <div class="hd-row">
+      <div id="dateline"></div>
+      <button id="btn-pin" aria-label="Condividi la mia posizione">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
       </button>
-      <span class="day">
-        <span id="dayLabel">Giorno 1</span>
-        <i class="prec"><i id="precisionFill"></i></i>
-      </span>
-    </header>
+    </div>
+  </header>
 
-    <section class="hero">
-      <div class="level">
-        <p class="level__name" id="levelName">Eccellente</p>
-        <p class="level__hint" id="levelHint">Sensibilità protetta. La botta è al massimo potenziale.</p>
-      </div>
-
-      <div class="dialwrap">
-        <button id="tapBtn" class="dial" type="button" aria-label="Registra una sessione. Sessioni di oggi: 0">
-          <span class="dial__ticks" aria-hidden="true"></span>
-          <span class="dial__ring" aria-hidden="true"></span>
-          <span class="dial__fx" id="tapFx" aria-hidden="true"></span>
-          <span class="dial__count" id="todayCount">0</span>
-          <span class="dial__unit">tocca</span>
+  <main>
+    <!-- ===== OGGI ===== -->
+    <div id="tab-oggi">
+      <div id="mic-wrap">
+        <div class="mist" id="mist-a"></div>
+        <div class="mist" id="mist-b"></div>
+        <button id="mic" aria-label="Avvia o ferma la dettatura">
+          <div class="ripple"></div><div class="ripple"></div><div class="ripple"></div>
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="ring-track" cx="100" cy="100" r="86"/>
+            <circle class="enso" id="enso" cx="100" cy="100" r="86" transform="rotate(-100 100 100)"/>
+            <g class="mic-glyph" transform="translate(100 100)">
+              <rect x="-11" y="-38" width="22" height="44" rx="11"/>
+              <path d="M -24 -6 a 24 24 0 0 0 48 0 h 7 a 31 31 0 0 1 -27 30.5 V 38 h 14 v 8 H -18 v -8 h 14 V 24.5 A 31 31 0 0 1 -31 -6 Z"/>
+            </g>
+          </svg>
+          <div id="seal-dot"></div>
         </button>
+        <div id="mic-label">Tocca il cerchio e rilascia</div>
+        <div id="ring-count"></div>
+        <div id="live"></div>
+        <div class="btn-row hidden" id="confirm-row">
+          <button class="act" id="btn-discard">Scarta</button>
+          <button class="act primary" id="btn-save">Distilla</button>
+        </div>
       </div>
 
-      <p class="last" id="lastSession">Nessuna sessione ancora · inizia quando vuoi</p>
+      <section id="sec-task">
+        <div class="sec-head">Oggi</div>
+        <div class="group" id="list-task"></div>
+      </section>
 
-      <div class="stats" aria-label="Statistiche">
-        <span><b id="avgValue">0.00</b><i>media/g</i></span>
-        <span class="sep"></span>
-        <span><b id="intervalValue">—</b><i>cadenza</i></span>
-        <span class="sep"></span>
-        <span><b id="totalValue">0</b><i>totale</i></span>
-      </div>
-    </section>
+      <section id="sec-quest">
+        <div class="sec-head">Quest</div>
+        <div class="group" id="list-quest"></div>
+      </section>
+    </div>
 
-    <section class="bottom">
-      <div class="histline" aria-label="Storico giorni">
-        <div class="histline__head"><span>Storico</span><span id="historyRange"></span></div>
-        <div class="histline__bars" id="historyBars"></div>
-      </div>
+    <!-- ===== DIARIO ===== -->
+    <div id="tab-diario" class="hidden">
+      <section>
+        <div id="list-diario" class="diary-font"></div>
+      </section>
+    </div>
 
-      <button id="undoBtn" class="undo" type="button" aria-label="Annulla l'ultima sessione" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>
-        </svg>
-        Annulla
-      </button>
+    <!-- ===== ALTRO ===== -->
+    <div id="tab-impostazioni" class="hidden">
+      <section>
+        <div class="sec-head">Esperienza</div>
+        <div class="group">
+          <div class="switchrow"><span>Suoni</span><button class="sw" id="sw-sound"></button></div>
+          <div class="switchrow"><span>Tema sonoro</span>
+            <div class="seg" id="seg-theme">
+              <button data-theme="arcade">Arcade</button><button data-theme="zen">Zen</button>
+            </div>
+          </div>
+          <div class="switchrow"><span>Voce ai completamenti</span><button class="sw" id="sw-voice"></button></div>
+          <div class="switchrow"><span>Posizione nelle note</span><button class="sw" id="sw-geo"></button></div>
+          <div class="switchrow"><span>Promemoria</span><button class="sw" id="sw-notif"></button></div>
+        </div>
+      </section>
 
-      <p class="foot">Archiviazione automatica · offline · dati sul telefono</p>
-    </section>
+      <section>
+        <div class="sec-head">Suoni personali</div>
+        <div class="group" id="list-sfx"></div>
+        <div class="btn-row"><button class="act primary" id="btn-addsfx">Aggiungi suono</button><button class="act" id="btn-clearsfx">Rimuovi tutti</button></div>
+        <input type="file" id="sfx-file" accept="audio/*,.m4r" class="hidden">
+        <p class="note">In ordine di intensità crescente: il combo livello 1 suona il primo, e così via. L'ultimo suona anche al sigillo. Restano solo su questo telefono.</p>
+      </section>
 
-    <p class="sr-only" id="srLive" role="status" aria-live="polite"></p>
+      <section>
+        <div class="sec-head">Intelligenza artificiale</div>
+        <input type="password" id="apikey" placeholder="sk-ant-...">
+        <p class="note">Con la chiave, l'IA distilla le quest dal parlato con priorità, giorno e ora. Senza, il trascritto viene salvato così com'è.</p>
+        <div class="btn-row"><button class="act primary" id="btn-savekey">Salva chiave</button><button class="act" id="btn-testkey">Prova connessione</button></div>
+        <p class="note" id="test-result"></p>
+      </section>
+
+      <section>
+        <div class="sec-head">Task pianificate</div>
+        <div class="group" id="list-sched"></div>
+        <input type="text" id="new-task-txt" placeholder="Es. 80 g proteine">
+        <div class="days" id="new-task-days"></div>
+        <input type="time" id="new-task-time">
+        <div class="btn-row"><button class="act primary" id="btn-addtask">Aggiungi task</button></div>
+      </section>
+
+      <section>
+        <div class="sec-head">Dati</div>
+        <div class="btn-row">
+          <button class="act" id="btn-export">Esporta backup</button>
+          <button class="act" id="btn-import">Importa</button>
+        </div>
+        <input type="file" id="import-file" accept="application/json" class="hidden">
+        <p class="note" id="version-line" style="text-align:center;margin-top:18px;opacity:.6"></p>
+      </section>
+    </div>
   </main>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <!-- ===== DATI E BACKUP ===== -->
-  <div class="sheet" id="historySheet" aria-hidden="true">
-    <div class="sheet__backdrop" data-close></div>
-    <div class="sheet__panel" role="dialog" aria-modal="true" aria-label="Dati e backup">
-      <div class="sheet__grab" data-close></div>
-      <header class="sheet__head">
-        <h2 class="sheet__title">Dati e backup</h2>
-        <button class="iconbtn" type="button" aria-label="Chiudi" data-close>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-        </button>
-      </header>
-
-      <div class="sheet__summary" id="backupSummary"></div>
-
-      <div class="sheet__sect">
-        <p class="sheet__lbl">Esporta</p>
-        <div class="btnrow">
-          <button class="bigbtn" id="btnExportShare" type="button">Condividi / Salva</button>
-          <button class="bigbtn bigbtn--ghost" id="btnExportCopy" type="button">Copia testo</button>
-        </div>
-        <p class="sheet__note">Salva il file di backup in un posto sicuro (app File, Note, email).</p>
-      </div>
-
-      <div class="sheet__sect">
-        <p class="sheet__lbl">Importa</p>
-        <label class="filelabel">Scegli un file di backup
-          <input type="file" id="importFile" accept="application/json,.json,.txt" hidden />
-        </label>
-        <textarea id="importText" class="importbox" placeholder="…oppure incolla qui il testo del backup" spellcheck="false"></textarea>
-        <button class="bigbtn bigbtn--danger" id="btnRestore" type="button">Ripristina dati</button>
-        <p class="sheet__note">Sostituisce i dati attuali sul telefono.</p>
-      </div>
-
-      <p class="sheet__status" id="backupStatus" role="status" aria-live="polite"></p>
+  <nav>
+    <div class="inner">
+      <button data-tab="oggi" class="on"><span class="ico">◯</span>Oggi</button>
+      <button data-tab="diario"><span class="ico">✎</span>Diario</button>
+      <button data-tab="impostazioni"><span class="ico">⚙</span>Altro</button>
     </div>
-  </div>
+  </nav>
+</div>
+<canvas id="fx"></canvas>
+<div id="flash"></div>
+<div id="word-stage"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- ===== SPLASH ===== -->
-  <div class="splash" id="splash" aria-hidden="true">
-    <span class="splash__ring"></span>
-    <span class="splash__word">Botta</span>
-  </div>
+<script>
+/* ======================================================================
+   NUCLEO PURO — nessun DOM, nessun side effect: tutto testabile.
+   ====================================================================== */
+/*CORE-START*/
+const LIMITS={TITLE:200,NOTE:300,DIARY:4000,RAW:4000,QMAX:100,DMAX:1000,SMAX:60};
+function clampStr(v,max){ return (typeof v==='string'?v:'').slice(0,max); }
+function localDayKey(d){
+  d=d||new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function dowOf(d){ return ((d||new Date()).getDay()+6)%7; } /* lun=0 */
+function coreUid(){ return Math.random().toString(36).slice(2,9); }
 
-  <script src="app.js" type="module"></script>
+function sanitizeQuests(arr){
+  if(!Array.isArray(arr)) return [];
+  const out=[],seen=new Set();
+  for(const q of arr){
+    if(!q||typeof q!=='object') continue;
+    const titolo=clampStr(q.titolo,LIMITS.TITLE).trim();
+    if(!titolo) continue;
+    let id=clampStr(q.id,24)||coreUid();
+    while(seen.has(id)) id=coreUid();
+    seen.add(id);
+    const quando=(typeof q.quando==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(q.quando))?q.quando:'';
+    const ora=(typeof q.ora==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(q.ora))?q.ora:'';
+    const prio=([1,2,3].includes(Number(q.prio)))?Number(q.prio):3;
+    out.push({id,titolo,note:clampStr(q.note,LIMITS.NOTE),quando,ora,prio,fatto:q.fatto===true});
+    if(out.length>=LIMITS.QMAX) break;
+  }
+  return out;
+}
+function questSortKey(q){ return String(q.prio||3)+(q.quando||'9999-99-99')+' '+(q.ora||'99:99'); }
+function sortQuests(qs){ return [...qs].sort((a,b)=>{const x=questSortKey(a),y=questSortKey(b);return x<y?-1:x>y?1:0;}); }
+function activeQuests(state,tk){ return state.quests.filter(q=>!q.quando||q.quando<=tk); }
+function sanitizeScheduled(arr){
+  if(!Array.isArray(arr)) return [];
+  const out=[],seen=new Set();
+  for(const t of arr){
+    if(!t||typeof t!=='object') continue;
+    const titolo=clampStr(t.titolo,LIMITS.TITLE).trim();
+    if(!titolo) continue;
+    let id=clampStr(t.id,24)||coreUid();
+    while(seen.has(id)) id=coreUid();
+    seen.add(id);
+    let days=Array.isArray(t.days)?t.days.filter(x=>Number.isInteger(x)&&x>=0&&x<=6):[];
+    days=[...new Set(days)].sort((a,b)=>a-b);
+    if(!days.length) continue;
+    const time=(typeof t.time==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(t.time))?t.time:'';
+    out.push({id,titolo,days,time});
+    if(out.length>=LIMITS.SMAX) break;
+  }
+  return out;
+}
+function sanitizeDiary(arr){
+  if(!Array.isArray(arr)) return [];
+  const out=[];
+  const lst=a=>Array.isArray(a)?a.filter(x=>typeof x==='string'&&x.trim()).slice(0,20).map(x=>x.slice(0,200)):[];
+  const posOf=p=>{
+    if(!p||typeof p!=='object') return null;
+    const lat=Number(p.lat),lon=Number(p.lon);
+    if(!isFinite(lat)||!isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180) return null;
+    return {lat:Math.round(lat*1e5)/1e5,lon:Math.round(lon*1e5)/1e5};
+  };
+  for(const e of arr){
+    if(!e||typeof e!=='object') continue;
+    const testo=clampStr(e.testo,LIMITS.DIARY);
+    if(!testo) continue;
+    const iso=(typeof e.iso==='string'&&!isNaN(Date.parse(e.iso)))?e.iso:new Date().toISOString();
+    out.push({data:clampStr(e.data,10),iso,testo,raw:clampStr(e.raw,LIMITS.RAW),born:lst(e.born),done:lst(e.done),pos:posOf(e.pos)});
+    if(out.length>=LIMITS.DMAX) break;
+  }
+  return out;
+}
+function sanitizeState(raw,def){
+  raw=(raw&&typeof raw==='object'&&!Array.isArray(raw))?raw:{};
+  const st={
+    apiKey:clampStr(raw.apiKey,300),
+    quests:sanitizeQuests(raw.quests),
+    diary:sanitizeDiary(raw.diary),
+    scheduled:('scheduled' in raw)?sanitizeScheduled(raw.scheduled):JSON.parse(JSON.stringify(def.scheduled)),
+    checks:{},
+    streak:(Number.isInteger(raw.streak)&&raw.streak>=0&&raw.streak<100000)?raw.streak:0,
+    lastSealed:(typeof raw.lastSealed==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.lastSealed))?raw.lastSealed:'',
+    lastDayInit:(typeof raw.lastDayInit==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.lastDayInit))?raw.lastDayInit:'',
+    settings:{
+      sound:!(raw.settings&&raw.settings.sound===false),
+      voice:!(raw.settings&&raw.settings.voice===false),
+      notif:!!(raw.settings&&raw.settings.notif===true),
+      geo:!!(raw.settings&&raw.settings.geo===true),
+      theme:(raw.settings&&raw.settings.theme==='zen')?'zen':'arcade'
+    }
+  };
+  if(raw.checks&&typeof raw.checks==='object'&&!Array.isArray(raw.checks)){
+    for(const k of Object.keys(raw.checks)){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) continue;
+      const day=raw.checks[k];
+      if(!day||typeof day!=='object') continue;
+      const clean={};
+      for(const id of Object.keys(day)) if(day[id]===true) clean[clampStr(id,24)]=true;
+      st.checks[k]=clean;
+    }
+  }
+  /* le spunte di più di 60 giorni fa non servono al loop: si potano da sole */
+  const keys=Object.keys(st.checks).sort();
+  while(keys.length>60) delete st.checks[keys.shift()];
+  return st;
+}
+function scheduledFor(state,dow){ return state.scheduled.filter(t=>t.days.includes(dow)); }
+function computeProgress(state,tk,dow){
+  const sched=scheduledFor(state,dow);
+  const checks=state.checks[tk]||{};
+  const act=activeQuests(state,tk); /* le quest future non pesano sul cerchio di oggi */
+  const total=sched.length+act.length;
+  const done=sched.filter(t=>checks[t.id]===true).length+act.filter(q=>q.fatto).length;
+  return {done,total,p:total?done/total:0};
+}
+function dayGap(a,b){ /* giorni interi tra due chiavi YYYY-MM-DD (b-a) */
+  return Math.round((Date.parse(b+'T12:00:00Z')-Date.parse(a+'T12:00:00Z'))/86400000);
+}
+function rolloverDay(state,tk){
+  if(state.lastDayInit===tk) return false;
+  state.quests=state.quests.filter(q=>!q.fatto); /* le compiute si archiviano */
+  state.lastDayInit=tk;
+  return true;
+}
+function sealIfComplete(state,tk,dow){
+  const r=computeProgress(state,tk,dow);
+  if(!(r.p===1&&r.total>0)) return 'open';
+  if(state.lastSealed===tk) return 'already';
+  state.lastSealed=tk;
+  return 'sealed';
+}
+function accumFromResults(results){
+  /* iOS può rispedire gli stessi finali in più eventi: si ricostruisce, mai si accumula */
+  let sessionFinal='',interim='';
+  for(const r of results){ if(r.final) sessionFinal+=r.text+' '; else interim+=r.text; }
+  return {sessionFinal,interim};
+}
+function extractJson(text){
+  if(typeof text!=='string') return null;
+  const a=text.indexOf('{'),b=text.lastIndexOf('}');
+  if(a<0||b<=a) return null;
+  try{ return JSON.parse(text.slice(a,b+1)); }catch(_){ return null; }
+}
+function aiOutputToState(parsed){
+  if(!parsed||typeof parsed!=='object') return null;
+  if(!Array.isArray(parsed.quests)) return null;
+  return {quests:sanitizeQuests(parsed.quests),diario:clampStr(parsed.diario,LIMITS.DIARY).trim()};
+}
+function nextReminderDelays(state,now){
+  const dow=dowOf(now),out=[];
+  for(const t of scheduledFor(state,dow)){
+    if(!t.time) continue;
+    const parts=t.time.split(':');
+    const when=new Date(now); when.setHours(+parts[0],+parts[1],0,0);
+    const ms=when-now;
+    if(ms>0&&ms<22*3600*1000) out.push({id:t.id,titolo:t.titolo,ms});
+  }
+  return out;
+}
+function pruneForSpace(state){
+  /* spazio quasi pieno: i trascritti grezzi più vecchi di 30 giorni lasciano il posto */
+  const cutoff=Date.now()-30*86400000;
+  let pruned=false;
+  for(const e of state.diary){
+    if(e.raw&&Date.parse(e.iso)<cutoff){ e.raw=''; pruned=true; }
+  }
+  if(!pruned&&state.diary.length>50){ state.diary.length=Math.floor(state.diary.length*0.8); pruned=true; }
+  return pruned;
+}
+/*CORE-END*/
+
+/* ======================================================================
+   STATO E UTILITÀ
+   ====================================================================== */
+const APP_VERSION='v21 · 2026-06-18';
+const LS='sentiero-v1';
+const DAYS_IT=['L','M','M','G','V','S','D'];
+const COMBO_WORDS=['Fatto','Bene','Ottimo','Eccellente','Sublime','Tao'];
+const todayKey=()=>localDayKey(new Date());
+const defaultState={
+  apiKey:'',quests:[],diary:[],
+  scheduled:[
+    {id:'s1',titolo:'80 g proteine',days:[0,1,2,3,4,5,6],time:''},
+    {id:'s2',titolo:'Sveglia alle 7',days:[0,1,2,3,4],time:'07:00'}
+  ],
+  checks:{},streak:0,lastSealed:'',lastDayInit:'',
+  settings:{sound:true,voice:true,notif:false}
+};
+let S=load();
+function load(){
+  let raw={};
+  try{ raw=JSON.parse(localStorage.getItem(LS)||'{}'); }catch(_){}
+  return sanitizeState(raw,defaultState);
+}
+function save(){
+  try{ localStorage.setItem(LS,JSON.stringify(S)); }
+  catch(_){
+    if(pruneForSpace(S)){
+      try{ localStorage.setItem(LS,JSON.stringify(S)); toast('Spazio recuperato: vecchi trascritti alleggeriti'); return; }catch(__){}
+    }
+    toast('Memoria piena o navigazione privata: dati non salvati');
+  }
+}
+const uid=coreUid;
+const $=s=>document.querySelector(s);
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ======================================================================
+   AUDIO — mai un crash per un suono: ogni via è protetta
+   ====================================================================== */
+let AC=null,BUS=null,NOISEBUF=null;
+function ac(){
+  if(!S.settings.sound) return null;
+  try{
+    const Ctor=window.AudioContext||window.webkitAudioContext;
+    if(!Ctor) return null;
+    if(!AC) AC=new Ctor();
+    if(AC.state==='suspended') AC.resume();
+    if(!BUS){
+      /* compressore master: le combo accavallano molti suoni, qui non distorcono mai */
+      BUS=AC.createDynamicsCompressor();
+      BUS.threshold.value=-18; BUS.knee.value=12; BUS.ratio.value=6;
+      BUS.attack.value=0.002; BUS.release.value=0.12;
+      const out=AC.createGain(); out.gain.value=0.9;
+      BUS.connect(out); out.connect(AC.destination);
+    }
+    return AC;
+  }catch(_){ return null; }
+}
+function tone(f,t0,dur,type,g,slide,vib){
+  try{
+    const a=ac(); if(!a) return;
+    type=type||'sine'; g=g||0.16;
+    const o=a.createOscillator(),v=a.createGain(),T=a.currentTime+t0;
+    o.type=type; o.frequency.setValueAtTime(f,T);
+    if(slide) o.frequency.exponentialRampToValueAtTime(slide,T+dur);
+    if(vib){ /* vibrato per le note tenute della fanfara */
+      const l=a.createOscillator(),lg=a.createGain();
+      l.frequency.value=6; lg.gain.value=f*0.012;
+      l.connect(lg); lg.connect(o.frequency);
+      l.start(T); l.stop(T+dur+0.05);
+    }
+    v.gain.setValueAtTime(0.0001,T);
+    v.gain.exponentialRampToValueAtTime(g,T+0.012);
+    v.gain.exponentialRampToValueAtTime(0.0001,T+dur);
+    o.connect(v); v.connect(BUS);
+    o.start(T); o.stop(T+dur+0.05);
+  }catch(_){}
+}
+function noiseHit(t0,dur,g,freq,q){
+  /* percussioni e scintille: rumore bianco filtrato, da sala giochi */
+  try{
+    const a=ac(); if(!a) return;
+    if(!NOISEBUF){
+      NOISEBUF=a.createBuffer(1,a.sampleRate*0.5,a.sampleRate);
+      const d=NOISEBUF.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    }
+    const T=a.currentTime+t0;
+    const src=a.createBufferSource(); src.buffer=NOISEBUF;
+    const f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||1800; f.Q.value=q||1.2;
+    const v=a.createGain();
+    v.gain.setValueAtTime(0.0001,T);
+    v.gain.exponentialRampToValueAtTime(g||0.18,T+0.005);
+    v.gain.exponentialRampToValueAtTime(0.0001,T+dur);
+    src.connect(f); f.connect(v); v.connect(BUS);
+    src.start(T); src.stop(T+dur+0.05);
+  }catch(_){}
+}
+
+/* ---------- due temi sonori: arcade (default) e zen ---------- */
+const PENTA=[293.66,329.63,369.99,440,493.88,587.33,659.25,739.99];
+/* scala maggiore di Sol, la scala delle sale giochi felici */
+const LADDER=[392,493.88,587.33,659.25,783.99,987.77,1174.66,1567.98];
+const SEMI=s=>Math.pow(2,s/12);
+
+const THEMES={
+  arcade:{
+    micOn(){ /* power-up: arpeggio quadro che sale */
+      [261.63,329.63,392,523.25].forEach((f,i)=>tone(f,i*0.055,0.09,'square',0.10));
+      noiseHit(0.22,0.06,0.07,5000,2);
+    },
+    micOff(){ /* pausa: due blip discendenti */
+      tone(523.25,0,0.07,'square',0.10);
+      tone(392,0.08,0.12,'square',0.09);
+    },
+    appear(i){ /* coin: ogni quest nasce con la sua monetina, intonata diversa */
+      const k=SEMI((i%4)*2);
+      tone(987.77*k,0,0.07,'square',0.11);
+      tone(1318.51*k,0.07,0.22,'square',0.11);
+    },
+    check(combo){ /* pop + arpeggio che cresce col combo */
+      const n=Math.min(combo,6);
+      noiseHit(0,0.045,0.16,1900,1.5); /* pop secco */
+      for(let i=0;i<n;i++) tone(LADDER[Math.min(i,7)],0.03+i*0.06,0.14,'square',0.11);
+      if(n>=3) tone(LADDER[Math.min(n,7)]*2,0.03+n*0.06,0.2,'square',0.09); /* ottava finale */
+      if(n>=4){ noiseHit(0.05+n*0.06,0.10,0.07,6500,3); noiseHit(0.12+n*0.06,0.10,0.05,8000,3); } /* scintille */
+      if(n>=6){ [1567.98,1975.53].forEach((f,i)=>tone(f,0.1+n*0.06+i*0.05,0.16,'triangle',0.08)); }
+    },
+    undo(){ tone(329.63,0,0.12,'square',0.07,220); },
+    seal(){ /* fanfara di fine livello: ta ta ta taa-TAA */
+      const mel=[[523.25,0,0.10],[523.25,0.12,0.10],[523.25,0.24,0.10],[659.25,0.36,0.16],[783.99,0.54,0.16],[1046.5,0.72,0.7]];
+      mel.forEach(([f,t,d],i)=>{
+        const last=i===mel.length-1;
+        tone(f,t,d,'square',0.12,0,last);
+        tone(f*0.5,t,d,'triangle',0.08); /* corpo sotto */
+        tone(f*SEMI(0.08),t,d,'square',0.05); /* detune: spessore */
+      });
+      noiseHit(0.72,0.45,0.12,7000,0.8); /* crash finale */
+    }
+  },
+  zen:{
+    micOn(){ tone(196,0,0.6,'sine',0.12,392); },
+    micOff(){ tone(392,0,0.18,'sine',0.12); tone(294,0.13,0.32,'sine',0.10); },
+    appear(i){ tone(PENTA[i%5+2],0,0.22,'triangle',0.14); },
+    check(combo){ const n=Math.min(combo,6); for(let i=0;i<n;i++) tone(PENTA[Math.min(i+1,7)],i*0.07,0.2,'triangle',0.15); },
+    undo(){ tone(330,0,0.15,'sine',0.08,260); },
+    seal(){ tone(98,0,2.6,'sine',0.3); tone(147,0.02,2.3,'sine',0.14); tone(196,0.04,2.0,'sine',0.08); tone(294,0.06,1.4,'sine',0.05); }
+  }
+};
+function sfx(name,arg){ try{ (THEMES[S.settings.theme]||THEMES.arcade)[name](arg); }catch(_){} }
+const sMicOn =()=>sfx('micOn');
+const sMicOff=()=>sfx('micOff');
+const sAppear=i=>sfx('appear',i);
+const sCheck =c=>sfx('check',c);
+const sUndo  =()=>sfx('undo');
+const sGong  =()=>sfx('seal');
+
+let itVoice=null;
+function pickVoice(){
+  try{
+    const vs=speechSynthesis.getVoices();
+    itVoice=vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith('it'))||null;
+  }catch(_){}
+}
+if('speechSynthesis' in window){ pickVoice(); try{speechSynthesis.onvoiceschanged=pickVoice;}catch(_){} }
+function say(word,lvl){
+  if(!S.settings.voice||!('speechSynthesis' in window)) return;
+  try{
+    if(speechSynthesis.speaking||speechSynthesis.pending) speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(word);
+    u.lang='it-IT'; if(itVoice) u.voice=itVoice;
+    /* l'annunciatore si esalta col combo, stile Candy Crush */
+    const L=Math.max(1,Math.min(lvl||1,6));
+    if(S.settings.theme==='arcade'){ u.pitch=Math.min(2,1+(L-1)*0.14); u.rate=1+(L-1)*0.05; }
+    else { u.pitch=1; u.rate=1; }
+    u.volume=1;
+    speechSynthesis.speak(u);
+  }catch(_){}
+}
+function shake(strong){
+  try{
+    if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.body.classList.remove('shake','shake-big');
+    void document.body.offsetWidth; /* riavvia l'animazione */
+    document.body.classList.add(strong?'shake-big':'shake');
+    setTimeout(()=>document.body.classList.remove('shake','shake-big'),450);
+  }catch(_){}
+}
+
+/* ======================================================================
+   FX — motore particellare su canvas: gira SOLO quando ci sono particelle,
+   DPR limitato a 2, tutto in try/catch: mai un crash per un effetto.
+   ====================================================================== */
+const FX=(()=>{
+  let cv=null,ctx=null,parts=[],raf=0,last=0;
+  const REDUCED=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function init(){
+    try{
+      cv=document.querySelector('#fx');
+      ctx=cv.getContext('2d');
+      resize();
+      window.addEventListener('resize',resize);
+    }catch(_){ ctx=null; }
+  }
+  function resize(){
+    try{
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      cv.width=innerWidth*dpr; cv.height=innerHeight*dpr;
+      cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }catch(_){}
+  }
+  function loop(t){
+    raf=0;
+    if(!ctx) return;
+    const dt=Math.min((t-last)/1000,0.05); last=t;
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      p.life-=dt;
+      if(p.life<=0){ parts.splice(i,1); continue; }
+      p.vy+=p.g*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.rot+=p.vr*dt;
+      if(p.sway) p.x+=Math.sin((p.life0-p.life)*p.sway)*p.swayAmp*dt;
+      const a=Math.min(1,p.life/p.fade)*p.alpha;
+      ctx.globalAlpha=a;
+      if(p.shape==='ring'){
+        ctx.strokeStyle=p.color; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size*(1+(1-p.life/p.life0)*3.2),0,Math.PI*2); ctx.stroke();
+      } else if(p.shape==='petal'){
+        ctx.fillStyle=p.color;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.beginPath(); ctx.ellipse(0,0,p.size,p.size*0.45,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+      } else {
+        ctx.fillStyle=p.color;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.globalAlpha=1;
+    if(parts.length) raf=requestAnimationFrame(loop);
+    else ctx.clearRect(0,0,innerWidth,innerHeight);
+  }
+  function kick(){ if(!raf&&parts.length){ last=performance.now(); raf=requestAnimationFrame(loop); } }
+  function add(p){
+    if(REDUCED||!ctx) return;
+    if(parts.length>400) parts.splice(0,parts.length-400); /* tetto rigido: la batteria ringrazia */
+    p.life0=p.life; parts.push(p); kick();
+  }
+  /* esplosione d'inchiostro alla spunta: cresce col combo */
+  function burst(x,y,lvl){
+    const colors=lvl>=6?['#B8372E','#C4673A','#F0E9DB']:lvl>=4?['#C4673A','#E8A84C','#F0E9DB']:['#E8A84C','#F0D9A8'];
+    const n=10+lvl*5;
+    for(let i=0;i<n;i++){
+      const a=Math.random()*Math.PI*2, s=70+Math.random()*150*(0.6+lvl*0.13);
+      add({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-50,g:360,vr:0,rot:0,sway:0,swayAmp:0,
+        size:1.4+Math.random()*2.6,life:0.5+Math.random()*0.5,fade:0.4,alpha:0.95,
+        color:colors[i%colors.length],shape:'dot'});
+    }
+    add({x,y,vx:0,vy:0,g:0,vr:0,rot:0,sway:0,swayAmp:0,size:9,life:0.45,fade:0.45,alpha:0.55,
+      color:lvl>=6?'#B8372E':'#E8A84C',shape:'ring'});
+  }
+  /* scintille alla nascita di una quest */
+  function sparkle(x,y){
+    for(let i=0;i<9;i++){
+      const a=Math.random()*Math.PI*2,s=30+Math.random()*70;
+      add({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,g:60,vr:0,rot:0,sway:0,swayAmp:0,
+        size:1+Math.random()*1.6,life:0.4+Math.random()*0.3,fade:0.3,alpha:0.9,color:'#E8A84C',shape:'dot'});
+    }
+  }
+  /* evaporazione delle parole durante la distillazione */
+  function wisp(x,y){
+    add({x:x+(Math.random()-0.5)*26,y,vx:(Math.random()-0.5)*12,vy:-44-Math.random()*44,g:-22,vr:0,rot:0,
+      sway:6,swayAmp:20,size:1.2+Math.random()*2,life:1+Math.random()*0.8,fade:0.8,alpha:0.5,
+      color:'#E8A84C',shape:'dot'});
+  }
+  /* fioritura di petali al sigillo */
+  function bloom(){
+    const cols=['#E8A84C','#C4673A','#B8372E','#F0E9DB'];
+    for(let i=0;i<60;i++){
+      add({x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight*0.3,
+        vx:(Math.random()-0.5)*40,vy:60+Math.random()*90,g:12,vr:(Math.random()-0.5)*4,rot:Math.random()*Math.PI,
+        sway:2,swayAmp:32,size:3+Math.random()*4,life:2.2+Math.random()*1.4,fade:0.9,alpha:0.9,
+        color:cols[i%4],shape:'petal'});
+    }
+  }
+  function pause(){ if(raf){ cancelAnimationFrame(raf); raf=0; } }
+  function resume(){ kick(); }
+  return {init,burst,sparkle,wisp,bloom,pause,resume};
+})();
+const FW_HOLD=[1.05,1.1,1.25,1.4,1.55,1.9]; /* permanenza a schermo per livello */
+function floatWord(word,lvl){
+  const L=Math.max(1,Math.min(lvl||1,6));
+  const w=document.createElement('div');
+  w.className='float-word lv'+L;
+  w.style.setProperty('--dur',FW_HOLD[L-1]+'s');
+  let inner='';
+  if(L>=3) inner+='<span class="fw-ghost" aria-hidden="true">'+escapeHtml(word)+'</span>';
+  if(L>=4) inner+='<span class="fw-ring"></span>';
+  if(L>=6) inner+='<span class="fw-ring fw-ring2"></span>';
+  inner+='<span class="fw-word">';
+  /* il passo per lettera si adatta: "Tao" slamma lento, "Cerchio chiuso" resta leggibile */
+  const step=L>=6?Math.min(0.11,0.55/Math.max(word.length,1)):0.04;
+  Array.from(word).forEach((ch,i)=>{
+    inner+='<span class="fw-l" style="animation-delay:'+(i*step).toFixed(3)+'s">'+(ch===' '?'&nbsp;':escapeHtml(ch))+'</span>';
+  });
+  inner+='</span>';
+  w.innerHTML=inner;
+  $('#word-stage').appendChild(w);
+  if(L>=5){ try{ FX.burst(innerWidth/2,innerHeight/2,L); }catch(_){} }
+  setTimeout(()=>w.remove(),FW_HOLD[L-1]*1000+260);
+}
+
+/* ======================================================================
+   SUONI PERSONALIZZATI — file dell'utente, solo su questo telefono
+   ====================================================================== */
+const SFX_LS='sentiero-sfx-v1';
+const SFX_MAX_FILE=400*1024, SFX_MAX_TOTAL=2*1024*1024, SFX_MAX_N=6;
+let SFX=loadSFX();
+function loadSFX(){
+  try{
+    const a=JSON.parse(localStorage.getItem(SFX_LS)||'[]');
+    return Array.isArray(a)?a.filter(x=>x&&typeof x.name==='string'&&typeof x.data==='string'&&x.data.startsWith('data:')).slice(0,SFX_MAX_N):[];
+  }catch(_){ return []; }
+}
+function saveSFX(){
+  try{ localStorage.setItem(SFX_LS,JSON.stringify(SFX)); return true; }
+  catch(_){ toast('Spazio insufficiente per i suoni: usa file pi\u00f9 piccoli (es. .m4r)'); return false; }
+}
+function playSFX(idx){
+  try{
+    if(!S.settings.sound||!SFX.length) return false;
+    const i=Math.max(0,Math.min(idx,SFX.length-1));
+    const a=new Audio(SFX[i].data);
+    a.volume=1; a.play().catch(()=>{});
+    return true;
+  }catch(_){ return false; }
+}
+
+/* ======================================================================
+   POSIZIONE — dov'ero quel giorno; condivisione rapida dal pin
+   ====================================================================== */
+let lastPos=null;
+function capturePos(){
+  if(!S.settings.geo||!('geolocation' in navigator)) return;
+  try{
+    navigator.geolocation.getCurrentPosition(
+      p=>{ lastPos={lat:Math.round(p.coords.latitude*1e5)/1e5,lon:Math.round(p.coords.longitude*1e5)/1e5,ts:Date.now()}; },
+      ()=>{},
+      {enableHighAccuracy:false,timeout:8000,maximumAge:600000}
+    );
+  }catch(_){}
+}
+function freshPos(){ return (lastPos&&Date.now()-lastPos.ts<30*60*1000)?{lat:lastPos.lat,lon:lastPos.lon}:null; }
+function mapsUrl(p){ return 'https://maps.google.com/?q='+p.lat+','+p.lon; }
+document.querySelector('#btn-pin').onclick=()=>{
+  if(!('geolocation' in navigator)){ toast('Posizione non supportata qui'); return; }
+  toast('Rilevo la posizione\u2026');
+  navigator.geolocation.getCurrentPosition(async p=>{
+    const pos={lat:Math.round(p.coords.latitude*1e5)/1e5,lon:Math.round(p.coords.longitude*1e5)/1e5};
+    lastPos={...pos,ts:Date.now()};
+    const url=mapsUrl(pos);
+    try{
+      if(navigator.share){ await navigator.share({title:'La mia posizione',url:url}); }
+      else { await navigator.clipboard.writeText(url); toast('Link posizione copiato'); }
+    }catch(_){/* condivisione annullata: nessun errore */}
+  },()=>{ toast('Permesso posizione negato: abilitalo nelle impostazioni iOS di Sentiero'); },
+  {enableHighAccuracy:true,timeout:10000,maximumAge:0});
+};
+
+/* ======================================================================
+   HEADER / TABS
+   ====================================================================== */
+function renderStreak(){
+  $('#dateline').textContent=new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+}
+document.querySelectorAll('nav button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    ['oggi','diario','impostazioni'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+    render();
+    try{
+      const pane=$('#tab-'+b.dataset.tab);
+      pane.classList.remove('tab-in'); void pane.offsetWidth; pane.classList.add('tab-in');
+    }catch(_){}
+  };
+});
+
+/* ======================================================================
+   DETTATURA
+   ====================================================================== */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,recording=false,committedText='',sessionFinal='',interimText='';
+const micBtn=$('#mic'),micLabel=$('#mic-label'),live=$('#live');
+if(!SR){ micLabel.textContent='Dettatura non disponibile: scrivi qui sotto.'; live.classList.add('show'); live.contentEditable='true'; }
+
+function startRec(){
+  committedText=''; sessionFinal=''; interimText='';
+  rec=new SR();
+  rec.lang='it-IT'; rec.continuous=true; rec.interimResults=true;
+  rec.onstart=()=>{
+    /* il microfono è DAVVERO attivo: solo ora invitiamo a parlare ed entriamo in rosso */
+    if(!recording) return;
+    micBtn.classList.remove('arming'); micBtn.classList.add('rec');
+    micLabel.textContent='Rilascia… tocca di nuovo per fermare';
+    sMicOn();
+  };
+  rec.onresult=e=>{
+    const arr=[];
+    for(let i=0;i<e.results.length;i++) arr.push({final:e.results[i].isFinal,text:e.results[i][0].transcript});
+    const acc=accumFromResults(arr);
+    sessionFinal=acc.sessionFinal; interimText=acc.interim;
+    live.innerHTML=escapeHtml(committedText+sessionFinal)+'<em>'+escapeHtml(interimText)+'</em>';
+    live.classList.add('show');
+  };
+  rec.onerror=e=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      recording=false; micBtn.classList.remove('rec','arming');
+      micLabel.textContent='Microfono non concesso. Attivalo in Impostazioni → Sentiero.';
+      return;
+    }
+    if(e.error!=='no-speech'&&e.error!=='aborted'){ toast('Errore microfono: '+e.error); stopRec(); }
+  };
+  rec.onend=()=>{
+    committedText+=sessionFinal; sessionFinal=''; interimText='';
+    if(recording){ try{rec.start()}catch(_){ recording=false; micBtn.classList.remove('rec','arming'); micLabel.textContent='Microfono interrotto. Tocca per riprendere.'; } }
+  };
+  recording=true;
+  /* stato 'in avvio': enso pulsa neutro, l'utente NON è invitato a parlare finché onstart non scatta */
+  micBtn.classList.add('arming');
+  micLabel.textContent='Preparazione del microfono…';
+  try{ rec.start(); }
+  catch(_){ recording=false; micBtn.classList.remove('arming'); toast('Impossibile avviare il microfono'); }
+}
+function stopRec(){
+  recording=false;
+  if(rec){ rec.onend=null; try{rec.stop()}catch(_){} }
+  micBtn.classList.remove('rec','arming');
+  sMicOff();
+  const txt=(committedText+sessionFinal+' '+interimText).replace(/\s+/g,' ').trim()||(!SR?live.textContent.trim():'');
+  if(txt){
+    micLabel.textContent='Rileggi e distilla';
+    live.textContent=txt; live.classList.add('show');
+    document.querySelector('#confirm-row').classList.remove('hidden');
+  }else{
+    micLabel.textContent='Silenzio. Riprova quando vuoi.';
+    live.classList.remove('show');
+    updateRing();
+  }
+}
+micBtn.addEventListener('click',()=>{
+  if(!SR){
+    const txt=live.textContent.trim();
+    if(txt) document.querySelector('#confirm-row').classList.remove('hidden');
+    return;
+  }
+  recording?stopRec():startRec();
+});
+document.querySelector('#btn-discard').onclick=resetCapture;
+function resetCapture(){
+  committedText='';sessionFinal='';interimText='';
+  live.textContent='';live.classList.remove('show','distill');
+  if(!SR) live.classList.add('show');
+  document.querySelector('#confirm-row').classList.add('hidden');
+  micLabel.textContent='Tocca il cerchio e rilascia';
+  updateRing();
+}
+
+/* ======================================================================
+   DISTILLAZIONE (IA)
+   ====================================================================== */
+let distilling=false;
+document.querySelector('#btn-save').onclick=async()=>{
+  if(distilling) return; /* mai due distillazioni sovrapposte */
+  const transcript=live.textContent.trim();
+  if(!transcript) return;
+  distilling=true;
+  const btn=document.querySelector('#btn-save');
+  btn.textContent='Distillo…'; btn.disabled=true;
+  live.classList.add('distill'); micLabel.textContent='Le parole si trasformano…';
+  let wispTimer=setInterval(()=>{
+    try{
+      const lr=live.getBoundingClientRect();
+      for(let i=0;i<3;i++) FX.wisp(lr.left+Math.random()*lr.width, lr.top+Math.random()*lr.height*0.7);
+    }catch(_){}
+  },140);
+  const beforeMap=new Map(S.quests.map(q=>[q.id,q]));
+  try{
+    if(S.apiKey){
+      const out=await askClaude(transcript);
+      if(out){
+        S.quests=sortQuests(out.quests);
+        /* collegamenti nota↔quest calcolati in locale, per diff: esatti, non interpretati */
+        const bornIds=S.quests.filter(q=>!beforeMap.has(q.id)).map(q=>q.id);
+        const bornTitles=S.quests.filter(q=>!beforeMap.has(q.id)).map(q=>q.titolo);
+        const doneTitles=S.quests.filter(q=>{const b=beforeMap.get(q.id);return b&&!b.fatto&&q.fatto;}).map(q=>q.titolo);
+        addDiary(transcript,bornTitles,doneTitles);
+        save(); render(bornIds);
+        bornIds.forEach((_,i)=>sAppear(i));
+        setTimeout(()=>{ /* scintille su ogni quest appena nata, a cascata */
+          bornIds.forEach((id,i)=>{
+            const qel=document.querySelector('[data-qid="'+id+'"]');
+            if(qel){ const r=qel.getBoundingClientRect(); setTimeout(()=>{ try{FX.sparkle(r.left+26,r.top+r.height/2);}catch(_){} }, i*130); }
+          });
+        },60);
+        toast(bornIds.length? bornIds.length+(bornIds.length===1?' nuova quest distillata':' nuove quest distillate') : 'Quest aggiornate, nota salvata');
+      } else throw new Error('bad');
+    }else{
+      addDiary(transcript,[],[]);
+      save(); render();
+      toast('Nota salvata nel diario (IA spenta: manca la chiave)');
+    }
+    resetCapture();
+  }catch(err){
+    addDiary(transcript,[],[]); save(); render(); resetCapture();
+    const code=(err&&err.message)||'';
+    let msg='IA non raggiungibile'+(code&&code!=='bad'?' ['+code.slice(0,90)+']':'')+': trascritto salvato comunque';
+    if(code==='bad') msg='L\u2019IA ha risposto in un formato non leggibile: riprova. Trascritto salvato.';
+    else if(code==='AUTH') msg='Chiave API non valida: ricopiala in Altro. Trascritto salvato.';
+    else if(code==='CREDIT') msg='Chiave valida ma credito assente: carica su console.anthropic.com → Billing. Trascritto salvato.';
+    else if(code==='MODEL') msg='Modello IA non disponibile: serve aggiornare l\u2019app. Trascritto salvato.';
+    else if(code==='RATE') msg='Troppe richieste ravvicinate: riprova tra un minuto. Trascritto salvato.';
+    else if(code==='BUSY') msg='Server IA sovraccarichi: riprova tra poco. Trascritto salvato.';
+    else if(err&&err.name==='AbortError') msg='IA troppo lenta (timeout): riprova. Trascritto salvato.';
+    else if(err instanceof TypeError) msg='Rete assente o bloccata: controlla la connessione. Trascritto salvato.';
+    toast(msg);
+  }finally{
+    clearInterval(wispTimer);
+    distilling=false;
+    btn.textContent='Distilla'; btn.disabled=false;
+    live.classList.remove('distill');
+  }
+};
+function addDiary(testo,born,done){
+  const lst=a=>Array.isArray(a)?a.filter(x=>typeof x==='string'&&x.trim()).slice(0,20).map(x=>x.slice(0,200)):[];
+  S.diary.unshift({data:todayKey(),iso:new Date().toISOString(),testo:clampStr(testo,LIMITS.DIARY),raw:'',born:lst(born),done:lst(done),pos:freshPos()});
+  if(S.diary.length>LIMITS.DMAX) S.diary.length=LIMITS.DMAX;
+}
+
+/* catena di modelli: se uno viene ritirato dall'API, si passa da soli al successivo */
+const AI_MODELS=['claude-sonnet-4-6','claude-haiku-4-5-20251001','claude-sonnet-4-20250514'];
+
+async function askClaude(transcript){
+  const oggi=new Date();
+  const oggiStr=oggi.toLocaleDateString('it-IT',{weekday:'long'})+' '+todayKey();
+  const sys='Sei il motore di "Sentiero", un diario vocale personale in italiano. OGGI è '+oggiStr+'.\n'+
+'Ricevi: (1) la lista JSON delle quest esistenti, (2) il trascritto vocale di oggi.\n'+
+'Compiti:\n'+
+'- Estrai TUTTE le quest dal trascritto: se contiene più attività distinte, crea una quest separata per ciascuna.\n'+
+'- Per ogni quest assegna "prio": 1=urgente (oggi, scade presto, critico), 2=importante, 3=normale.\n'+
+'- Se indica quando, compila "quando" (YYYY-MM-DD) e "ora" (HH:MM). Se no, lascia stringa vuota.\n'+
+'- Se una quest corrisponde a una esistente, aggiornala (stesso id); se dice che l\'ha completata, "fatto":true.\n'+
+'- Mantieni le quest esistenti non menzionate invariate.\n'+
+'Rispondi SOLO con JSON valido:\n'+
+'{"quests":[{"id":"...","titolo":"...","note":"","quando":"","ora":"","prio":3,"fatto":false}]}';
+  let lastErr=null;
+  for(const model of AI_MODELS){
+    const ctrl=('AbortController' in window)?new AbortController():null;
+    const timer=ctrl?setTimeout(()=>ctrl.abort(),45000):null; /* mai un'attesa infinita */
+    let r;
+    try{
+      r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        signal:ctrl?ctrl.signal:undefined,
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':S.apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:model,
+          max_tokens:1500,
+          system:sys,
+          messages:[{role:'user',content:'QUEST ESISTENTI:\n'+JSON.stringify(S.quests)+'\n\nTRASCRITTO DI OGGI ('+todayKey()+'):\n'+transcript}]
+        })
+      });
+    }finally{ if(timer) clearTimeout(timer); }
+    if(!r.ok){
+      let detail='';
+      try{ const eb=await r.json(); detail=(eb&&eb.error&&eb.error.message)||''; }catch(_){}
+      if(r.status===401||r.status===403) throw new Error('AUTH');
+      if(r.status===400&&/credit/i.test(detail)) throw new Error('CREDIT');
+      if(r.status===404||/model/i.test(detail)&&r.status===400){ lastErr=new Error('MODEL'); continue; } /* modello ritirato: prova il prossimo */
+      if(r.status===429) throw new Error('RATE');
+      if(r.status===529||/overloaded/i.test(detail)) throw new Error('BUSY');
+      throw new Error('HTTP '+r.status+(detail?' — '+detail.slice(0,80):''));
+    }
+    const data=await r.json();
+    const text=(data.content||[]).map(c=>c.text||'').join('');
+    return aiOutputToState(extractJson(text));
+  }
+  throw lastErr||new Error('MODEL');
+}
+
+/* ======================================================================
+   COMBO & SIGILLO
+   ====================================================================== */
+let combo=0,lastCheck=0;
+function onComplete(el){
+  const now=Date.now();
+  combo=(now-lastCheck<10000)?combo+1:1;
+  lastCheck=now;
+  const lvl=Math.min(combo,6);
+  const word=COMBO_WORDS[lvl-1];
+  if(playSFX(lvl-1)){ floatWord(word,lvl); } /* suono dell'utente: niente synth n\u00e9 voce sopra */
+  else { sCheck(lvl); say(word,lvl); floatWord(word,lvl); }
+  try{
+    const c=el.querySelector('.chk');
+    if(c){ const r=c.getBoundingClientRect(); FX.burst(r.left+r.width/2,r.top+r.height/2,lvl); }
+  }catch(_){}
+  if(lvl>=5) shake(false);
+  el.classList.add('justdone');
+  ink(el);
+  updateRing();
+}
+function ink(itemEl){
+  const chk=itemEl.querySelector('.chk');
+  if(!chk) return;
+  const d=document.createElement('span');
+  d.className='inkdot';
+  d.style.left=(chk.offsetLeft+8)+'px';
+  d.style.top=(chk.offsetTop+8)+'px';
+  itemEl.appendChild(d);
+  setTimeout(()=>d.remove(),600);
+}
+function updateRing(){
+  const tk=todayKey(),dow=dowOf();
+  const r=computeProgress(S,tk,dow);
+  const ensoEl=document.querySelector('#enso');
+  ensoEl.style.strokeDashoffset=500-460*r.p;
+  ensoEl.style.filter='drop-shadow(0 0 '+(4+12*r.p)+'px var(--jade-glow))'; /* il bagliore cresce col cerchio */
+  const res=sealIfComplete(S,tk,dow);
+  if(res==='sealed'){
+    save();
+    micBtn.classList.add('sealed');
+    setTimeout(()=>{
+      if(playSFX(SFX.length-1)){ floatWord('Cerchio chiuso',6); shake(true); }
+      else { sGong(); say('Tao',6); floatWord('Cerchio chiuso',6); shake(true); }
+      try{ FX.bloom(); }catch(_){}
+      try{ const f=document.querySelector('#flash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); }catch(_){}
+    },350);
+    document.querySelector('#ring-count').textContent='Cerchio chiuso · a domani';
+  } else if(res==='already'){
+    micBtn.classList.add('sealed');
+    document.querySelector('#ring-count').textContent='Cerchio chiuso · a domani';
+  } else {
+    micBtn.classList.remove('sealed');
+    document.querySelector('#ring-count').textContent= r.total? (r.done+' / '+r.total+' · il cerchio si chiude') : '';
+  }
+}
+
+/* ======================================================================
+   NUOVO GIORNO
+   ====================================================================== */
+let renderedDay=todayKey();
+function initDay(){ if(rolloverDay(S,todayKey())) save(); }
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible'){ try{FX.pause();}catch(_){} return; }
+  try{FX.resume();}catch(_){}
+  if(renderedDay!==todayKey()){
+    renderedDay=todayKey();
+    initDay(); resetCapture(); render();
+  }
+  scheduleReminders();
+  capturePos();
+});
+
+/* ======================================================================
+   RENDER
+   ====================================================================== */
+function render(bornIds){ renderTasks(); renderQuests(bornIds||[]); renderDiary(); renderSettings(); renderStreak(); updateRing(); }
+function todaysScheduled(){ return scheduledFor(S,dowOf()); }
+
+function renderTasks(){
+  const el=document.querySelector('#list-task'); const list=todaysScheduled();
+  const checks=S.checks[todayKey()]||{};
+  if(!list.length){ el.innerHTML='<p class="empty">Nessuna task pianificata per oggi. Aggiungile in Altro.</p>'; return; }
+  el.innerHTML='';
+  list.forEach(t=>{
+    const done=checks[t.id]===true;
+    const div=document.createElement('div');
+    div.className='item'+(done?' done':'');
+    div.innerHTML='<span class="prio prio-0"></span>'+
+      '<button class="chk" aria-label="Completa"></button>'+
+      '<span class="txt">'+escapeHtml(t.titolo)+(t.time?'<span class="meta">⏰ '+t.time+'</span>':'')+'</span>';
+    div.querySelector('.chk').onclick=()=>{
+      S.checks[todayKey()]=S.checks[todayKey()]||{};
+      const now=!done;
+      S.checks[todayKey()][t.id]=now; save();
+      if(now){ div.classList.add('done'); onComplete(div); setTimeout(renderTasks,600); }
+      else { sUndo(); renderTasks(); updateRing(); }
+    };
+    el.appendChild(div);
+  });
+}
+function renderQuests(bornIds){
+  const el=document.querySelector('#list-quest');
+  if(!S.quests.length){ el.innerHTML='<p class="empty">Nessuna quest. Parla al cerchio: l\u2019IA le distiller\u00e0 da ci\u00f2 che dici.</p>'; return; }
+  el.innerHTML='';
+  const tk=todayKey();
+  const domani=localDayKey(new Date(Date.now()+86400000));
+  sortQuests(S.quests).forEach(q=>{
+    const future=q.quando&&q.quando>tk;
+    const overdue=q.quando&&q.quando<tk&&!q.fatto;
+    let when='';
+    if(q.quando){
+      const lbl=q.quando===tk?'oggi':q.quando===domani?'domani':new Date(q.quando+'T12:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});
+      when='<span class="meta'+(overdue?' over':future?' soon':'')+'">'+(overdue?'\u23F3 in ritardo \u00b7 ':'')+'\uD83D\uDCC5 '+lbl+(q.ora?' \u00b7 '+q.ora:'')+'</span>';
+    } else if(q.ora){
+      when='<span class="meta">\u23F0 '+q.ora+'</span>';
+    }
+    const p=q.prio||3;
+    const div=document.createElement('div');
+    div.dataset.qid=q.id;
+    div.className='item'+(q.fatto?' done':'')+(future?' future':'')+(bornIds.includes(q.id)?' born':'');
+    if(bornIds.includes(q.id)) div.style.animationDelay=(bornIds.indexOf(q.id)*0.13)+'s';
+    div.innerHTML='<span class="prio prio-'+p+'"></span>'+
+      '<button class="chk" aria-label="Completa"></button>'+
+      '<span class="txt">'+escapeHtml(q.titolo)+when+(q.note?'<span class="meta">'+escapeHtml(q.note)+'</span>':'')+'</span>'+
+      '<button class="del" aria-label="Elimina">×</button>';
+    div.querySelector('.chk').onclick=()=>{
+      q.fatto=!q.fatto; save();
+      if(q.fatto){ div.classList.add('done'); onComplete(div); setTimeout(()=>renderQuests([]),600); }
+      else { sUndo(); renderQuests([]); updateRing(); }
+    };
+    div.querySelector('.del').onclick=()=>{ S.quests=S.quests.filter(x=>x!==q); save(); renderQuests([]); updateRing(); };
+    el.appendChild(div);
+  });
+}
+function renderDiary(){
+  const el=document.querySelector('#list-diario');
+  if(!S.diary.length){ el.innerHTML='<p class="empty">Il diario \u00e8 vuoto. \u00c8 la conseguenza, non lo scopo: ogni rilascio distillato aggiunge una nota qui.</p>'; return; }
+  el.innerHTML='';
+  S.diary.forEach(e=>{
+    const div=document.createElement('div'); div.className='entry';
+    const d=new Date(e.iso);
+    /* le voci vecchie avevano il trascritto in raw e il riepilogo IA in testo: mostriamo il trascritto */
+    const txt=e.raw||e.testo;
+    const born=Array.isArray(e.born)?e.born:[];
+    const done=Array.isArray(e.done)?e.done:[];
+    div.innerHTML='<time>'+d.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'})+' · '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+
+      (e.pos?' · <a class="posa" href="'+mapsUrl(e.pos)+'" target="_blank" rel="noopener">📍 dov\u2019ero</a>':'')+'</time>'+
+      '<p>'+escapeHtml(txt)+'</p>'+
+      (born.length?'<p class="tags born-t">✦ '+born.map(escapeHtml).join(' · ')+'</p>':'')+
+      (done.length?'<p class="tags done-t">✓ '+done.map(escapeHtml).join(' · ')+'</p>':'');
+    el.appendChild(div);
+  });
+}
+
+/* ======================================================================
+   IMPOSTAZIONI
+   ====================================================================== */
+let newDays=[0,1,2,3,4,5,6];
+function renderSettings(){
+  document.querySelector('#version-line').textContent='Sentiero '+APP_VERSION;
+  document.querySelector('#apikey').value=S.apiKey;
+  document.querySelector('#sw-sound').classList.toggle('on',S.settings.sound);
+  document.querySelector('#sw-voice').classList.toggle('on',S.settings.voice);
+  document.querySelector('#sw-notif').classList.toggle('on',S.settings.notif);
+  document.querySelector('#sw-geo').classList.toggle('on',S.settings.geo);
+  document.querySelectorAll('#seg-theme button').forEach(b=>b.classList.toggle('on',b.dataset.theme===S.settings.theme));
+  /* lista suoni personalizzati */
+  const sfxEl=document.querySelector('#list-sfx');
+  if(!SFX.length){ sfxEl.innerHTML='<p class="empty">Nessun suono caricato: combo e sigillo usano il tema sonoro.</p>'; }
+  else{
+    sfxEl.innerHTML='';
+    SFX.forEach((s,i)=>{
+      const div=document.createElement('div'); div.className='item';
+      div.innerHTML='<span class="txt">Livello '+(i+1)+(i===SFX.length-1?' + sigillo':'')+'<span class="meta">'+escapeHtml(s.name)+'</span></span><button class="del">×</button>';
+      div.querySelector('.txt').onclick=()=>playSFX(i); /* tocca per riascoltare */
+      div.querySelector('.del').onclick=()=>{ SFX.splice(i,1); saveSFX(); renderSettings(); };
+      sfxEl.appendChild(div);
+    });
+  }
+  document.querySelector('#btn-addsfx').textContent=SFX.length>=SFX_MAX_N?'Massimo 6 suoni':'Aggiungi suono (livello '+(SFX.length+1)+')';
+  document.querySelector('#btn-addsfx').disabled=SFX.length>=SFX_MAX_N;
+  const dd=document.querySelector('#new-task-days'); dd.innerHTML='';
+  DAYS_IT.forEach((lbl,i)=>{
+    const b=document.createElement('button');
+    b.textContent=lbl; b.type='button';
+    b.className=newDays.includes(i)?'on':'';
+    b.onclick=()=>{ newDays=newDays.includes(i)?newDays.filter(x=>x!==i):[...newDays,i]; renderSettings(); };
+    dd.appendChild(b);
+  });
+  const el=document.querySelector('#list-sched');
+  if(!S.scheduled.length){ el.innerHTML='<p class="empty">Nessuna task pianificata.</p>'; }
+  else{
+    el.innerHTML='';
+    S.scheduled.forEach(t=>{
+      const div=document.createElement('div'); div.className='item';
+      const days=t.days.length===7?'ogni giorno':t.days.map(i=>DAYS_IT[i]).join(' ');
+      div.innerHTML='<span class="txt">'+escapeHtml(t.titolo)+'<span class="meta">'+days+(t.time?' · '+t.time:'')+'</span></span><button class="del">×</button>';
+      div.querySelector('.del').onclick=()=>{ S.scheduled=S.scheduled.filter(x=>x!==t); save(); renderSettings(); renderTasks(); updateRing(); };
+      el.appendChild(div);
+    });
+  }
+}
+document.querySelector('#sw-sound').onclick=()=>{ S.settings.sound=!S.settings.sound; save(); renderSettings(); if(S.settings.sound) sAppear(0); };
+document.querySelectorAll('#seg-theme button').forEach(b=>{
+  b.onclick=()=>{
+    S.settings.theme=b.dataset.theme==='zen'?'zen':'arcade';
+    save(); renderSettings();
+    sCheck(3); /* anteprima immediata del nuovo tema */
+  };
+});
+document.querySelector('#sw-voice').onclick=()=>{ S.settings.voice=!S.settings.voice; save(); renderSettings(); if(S.settings.voice) say('Voce attiva'); };
+document.querySelector('#sw-geo').onclick=()=>{
+  if(!S.settings.geo){
+    if(!('geolocation' in navigator)){ toast('Posizione non supportata qui'); return; }
+    S.settings.geo=true; save(); renderSettings();
+    capturePos(); /* fa apparire subito la richiesta di permesso iOS */
+    toast('Le prossime note ricorderanno dov\u2019eri');
+  } else {
+    S.settings.geo=false; lastPos=null; save(); renderSettings();
+    toast('Posizione spenta: le note non la registrano pi\u00f9');
+  }
+};
+document.querySelector('#btn-addsfx').onclick=()=>document.querySelector('#sfx-file').click();
+document.querySelector('#sfx-file').onchange=e=>{
+  const f=e.target.files[0]; e.target.value='';
+  if(!f) return;
+  if(f.size>SFX_MAX_FILE){ toast('File troppo grande (max 400 KB): usa la versione .m4r'); return; }
+  const total=SFX.reduce((a,s)=>a+s.data.length,0);
+  if(total+f.size*1.4>SFX_MAX_TOTAL){ toast('Spazio suoni esaurito: rimuovine qualcuno'); return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    let data=r.result;
+    /* iOS rifiuta data-URL senza MIME: i .m4r spesso arrivano senza tipo */
+    if(data.startsWith('data:;')||data.startsWith('data:application/octet-stream;')){
+      const ext=(f.name.split('.').pop()||'').toLowerCase();
+      const mime=ext==='wav'?'audio/wav':ext==='mp3'?'audio/mpeg':'audio/mp4';
+      data='data:'+mime+';'+data.split(';').slice(1).join(';');
+    }
+    SFX.push({name:f.name.slice(0,60),data:data});
+    if(saveSFX()){ renderSettings(); playSFX(SFX.length-1); toast('Suono caricato al livello '+SFX.length); }
+    else SFX.pop();
+  };
+  r.onerror=()=>toast('Impossibile leggere il file');
+  r.readAsDataURL(f);
+};
+document.querySelector('#btn-clearsfx').onclick=()=>{ if(!SFX.length) return; SFX=[]; saveSFX(); renderSettings(); toast('Suoni rimossi: si torna al tema sonoro'); };
+document.querySelector('#sw-notif').onclick=async()=>{
+  if(!S.settings.notif){
+    if(!('Notification' in window)){ toast('Notifiche non supportate qui. Installa l\u2019app sulla Home.'); return; }
+    let perm='denied';
+    try{ perm=await Notification.requestPermission(); }
+    catch(_){ try{ Notification.requestPermission(p=>{perm=p;}); }catch(__){} }
+    if(perm!=='granted'){ toast('Permesso negato nelle impostazioni iOS'); return; }
+    S.settings.notif=true; save(); renderSettings(); scheduleReminders(); toast('Promemoria attivi');
+  } else {
+    S.settings.notif=false; save(); renderSettings(); clearReminders(); toast('Promemoria spenti');
+  }
+};
+document.querySelector('#btn-savekey').onclick=()=>{ S.apiKey=document.querySelector('#apikey').value.trim(); save(); toast(S.apiKey?'Chiave salvata':'Chiave rimossa'); };
+document.querySelector('#btn-testkey').onclick=async()=>{
+  const out=document.querySelector('#test-result');
+  const field=document.querySelector('#apikey').value.trim();
+  if(field&&field!==S.apiKey){ S.apiKey=field; save(); } /* se ha incollato senza salvare, salva ora */
+  if(!S.apiKey){ out.textContent='Nessuna chiave salvata: incollala qui sopra.'; return; }
+  if(!S.apiKey.startsWith('sk-ant-')){ out.textContent='✗ La chiave dovrebbe iniziare con sk-ant-. Probabilmente è stata copiata a metà: creane una nuova su console.anthropic.com → API Keys.'; return; }
+  out.textContent='Provo la connessione…';
+  try{
+    let r=null,detail='',usedModel='';
+    for(const model of AI_MODELS){
+      r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':S.apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({model:model,max_tokens:8,messages:[{role:'user',content:'Rispondi solo: ok'}]})
+      });
+      detail='';
+      try{ const j=await r.clone().json(); detail=(j&&j.error&&j.error.message)||''; }catch(_){}
+      if(r.ok){ usedModel=model; break; }
+      if(!(r.status===404||(r.status===400&&/model/i.test(detail)))) break; /* errore diverso dal modello: inutile provare oltre */
+    }
+    if(r&&r.ok){ out.textContent='✓ Tutto funziona: chiave valida, credito attivo, modello '+usedModel+'. Vai a distillare.'; sAppear(0); }
+    else if(r&&(r.status===401||r.status===403)) out.textContent='✗ Chiave non valida (errore '+r.status+'). Ricopiala per intero da console.anthropic.com → API Keys (o creane una nuova) e salvala di nuovo qui.';
+    else if(r&&r.status===400&&/credit/i.test(detail)) out.textContent='✗ La chiave è giusta ma manca il credito: su console.anthropic.com → Billing carica almeno 5 $ con una carta, poi riprova.';
+    else if(r&&(r.status===404||/model/i.test(detail))) out.textContent='✗ Nessuno dei modelli risponde (404): l\u2019app va aggiornata, segnalalo.';
+    else if(r&&r.status===429) out.textContent='✗ Troppe richieste (429): aspetta un minuto e riprova.';
+    else if(r&&r.status===529) out.textContent='✗ Server IA momentaneamente sovraccarichi: riprova tra qualche minuto.';
+    else out.textContent='✗ Errore '+(r?r.status:'')+(detail?': '+detail.slice(0,140):'');
+  }catch(e){
+    out.textContent='✗ La rete non raggiunge i server IA: controlla la connessione (e prova a spegnere VPN o blocchi DNS/contenuti se ne usi).';
+  }
+};
+document.querySelector('#btn-addtask').onclick=()=>{
+  const txt=document.querySelector('#new-task-txt').value.trim();
+  if(!txt) return toast('Scrivi il testo della task');
+  if(!newDays.length) return toast('Scegli almeno un giorno');
+  S.scheduled=sanitizeScheduled([...S.scheduled,{id:uid(),titolo:txt,days:[...newDays].sort((a,b)=>a-b),time:document.querySelector('#new-task-time').value||''}]);
+  document.querySelector('#new-task-txt').value=''; document.querySelector('#new-task-time').value='';
+  save(); renderSettings(); renderTasks(); updateRing(); scheduleReminders(); toast('Task aggiunta');
+};
+
+/* ======================================================================
+   PROMEMORIA
+   ====================================================================== */
+let reminderTimers=[];
+function clearReminders(){ reminderTimers.forEach(clearTimeout); reminderTimers=[]; }
+function scheduleReminders(){
+  clearReminders();
+  if(!S.settings.notif||!('Notification' in window)||Notification.permission!=='granted') return;
+  nextReminderDelays(S,new Date()).forEach(t=>{
+    reminderTimers.push(setTimeout(async()=>{
+      try{
+        const reg=await navigator.serviceWorker.ready;
+        reg.showNotification('Sentiero',{body:t.titolo,icon:'icon-192.png',badge:'icon-192.png',tag:'sentiero-'+t.id});
+      }catch(_){ try{ new Notification('Sentiero',{body:t.titolo}); }catch(__){} }
+    },t.ms));
+  });
+}
+
+/* ======================================================================
+   BACKUP
+   ====================================================================== */
+document.querySelector('#btn-export').onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='sentiero-backup-'+todayKey()+'.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+};
+document.querySelector('#btn-import').onclick=()=>document.querySelector('#import-file').click();
+document.querySelector('#import-file').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const parsed=JSON.parse(r.result);
+      S=sanitizeState(parsed,defaultState);
+      initDay(); save(); render(); toast('Backup importato');
+    }catch(_){ toast('File non valido'); }
+  };
+  r.readAsText(f);
+  e.target.value='';
+};
+
+/* ======================================================================
+   AVVIO
+   ====================================================================== */
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').then(scheduleReminders).catch(()=>{}); }
+initDay();
+render();
+scheduleReminders();
+/* la posizione si attiva solo su scelta esplicita (switch in Altro) o sul pin: niente richieste a freddo */
+/* large title iOS 26: compatta la testata allo scroll */
+try{
+  const mainEl=document.querySelector('main'), hdr=document.querySelector('header');
+  let ticking=false;
+  mainEl.addEventListener('scroll',()=>{
+    if(ticking) return; ticking=true;
+    requestAnimationFrame(()=>{ hdr.classList.toggle('scrolled', mainEl.scrollTop>16); ticking=false; });
+  },{passive:true});
+}catch(_){}
+/* ── apertura: l'intro continua dalla splash nativa e si dissolve sull'app già viva sotto ── */
+try{
+  const intro=document.querySelector('#app-intro');
+  const appEl=document.querySelector('#app');
+  /* l'app è già montata e opaca sotto l'intro: quando l'intro svanisce, l'enso del microfono
+     è già lì nella stessa posizione → illusione di un solo movimento continuo */
+  appEl.style.opacity='1';
+  const fast=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(()=>{
+    intro.classList.add('leaving');
+    setTimeout(()=>{ intro.style.display='none'; maybeOnboard(); }, fast?60:750);
+  },fast?200:1500);
+}catch(_){ try{document.querySelector('#app-intro').style.display='none';}catch(e){} maybeOnboard(); }
+
+/* ======================================================================
+   ONBOARDING + PERMESSI (una sola volta, nel contesto giusto)
+   ====================================================================== */
+function isStandalone(){
+  return (window.navigator&&window.navigator.standalone===true) ||
+         (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+}
+function maybeOnboard(){
+  let seen=false;
+  try{ seen=localStorage.getItem('sentiero-onboarded')==='1'; }catch(_){}
+  if(seen) return;
+  const ob=document.querySelector('#onboard');
+  const note=document.querySelector('#ob-note');
+  if(!isStandalone()) note.textContent='Suggerimento: Condividi → "Aggiungi alla schermata Home" per i permessi permanenti e le notifiche.';
+  ob.classList.remove('hidden');
+  document.querySelector('#ob-go').onclick=async()=>{
+    try{ localStorage.setItem('sentiero-onboarded','1'); }catch(_){}
+    /* chiede il microfono una volta, nel momento giusto, con un gesto utente reale */
+    await primeMicPermission();
+    ob.style.transition='opacity .4s ease'; ob.style.opacity='0';
+    setTimeout(()=>ob.classList.add('hidden'),400);
+  };
+}
+/* "scalda" il permesso microfono: avvio+stop immediato così iOS chiede ORA, non a metà dettatura */
+async function primeMicPermission(){
+  if(!SR) return;
+  try{
+    if(navigator.permissions&&navigator.permissions.query){
+      const st=await navigator.permissions.query({name:'microphone'}).catch(()=>null);
+      if(st&&st.state==='granted') return; /* già concesso: non ridisturbare */
+    }
+  }catch(_){}
+  try{
+    const probe=new SR(); probe.lang='it-IT';
+    probe.onerror=()=>{}; probe.onstart=()=>{ try{probe.stop()}catch(_){} };
+    probe.start();
+    setTimeout(()=>{ try{probe.stop()}catch(_){} },400);
+  }catch(_){}
+}
+
+</script>
 </body>
 </html>
