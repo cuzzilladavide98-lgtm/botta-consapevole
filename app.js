@@ -6,6 +6,8 @@
 
 'use strict';
 
+import { Chiptune } from './audio.js';
+
 /* ---------------------------------------------------------------------
    COSTANTI
    --------------------------------------------------------------------- */
@@ -150,6 +152,13 @@ const els = {
   splash: $('#splash'),
   levelFlash: $('#levelFlash'),
   themeMeta: document.querySelector('meta[name="theme-color"]'),
+  soundBtn: $('#soundBtn'),
+  historyBtn: $('#historyBtn'),
+  historyCard: $('#historyCard'),
+  historySheet: $('#historySheet'),
+  historySummary: $('#historySummary'),
+  historyChartFull: $('#historyChartFull'),
+  historyList: $('#historyList'),
 };
 
 let toastTimer = null;
@@ -318,6 +327,7 @@ function render(s, { announceLevel = false } = {}) {
   if (livello.key !== lastLevelKey) {
     els.body.setAttribute('data-level', livello.key);
     document.documentElement.setAttribute('data-level', livello.key);
+    Chiptune.setLevel(livello.key);          // la colonna sonora segue il Status
     if (announceLevel && lastLevelKey !== null) {
       toast(`Livello: ${livello.nome}`);
       haptic(18);
@@ -376,6 +386,7 @@ function renderHistory(s) {
    --------------------------------------------------------------------- */
 function registraTocco(e) {
   enableTilt();                 // primo gesto utente: abilita la parallasse (permesso iOS)
+  if (soundOn) Chiptune.play(); // riprende l'audio sul gesto utente (policy iOS)
   checkRollover(state);
   const ts = Date.now();
 
@@ -447,6 +458,100 @@ function dismissSplash() {
 }
 
 /* ---------------------------------------------------------------------
+   COLONNA SONORA — toggle persistito (default spento; parte da un gesto)
+   --------------------------------------------------------------------- */
+const SOUND_KEY = 'bottaConsapevole.sound';
+let soundOn = false;
+try { soundOn = localStorage.getItem(SOUND_KEY) === '1'; } catch {}
+
+function reflectSoundBtn() {
+  if (!els.soundBtn) return;
+  els.soundBtn.classList.toggle('on', soundOn);
+  els.soundBtn.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+  els.soundBtn.setAttribute('aria-label', soundOn ? 'Disattiva la colonna sonora' : 'Attiva la colonna sonora');
+}
+
+async function toggleSound() {
+  soundOn = !soundOn;
+  try { localStorage.setItem(SOUND_KEY, soundOn ? '1' : '0'); } catch {}
+  reflectSoundBtn();
+  if (soundOn) {
+    Chiptune.setLevel(lastLevelKey || 'eccellente');
+    await Chiptune.play();
+    toast('Colonna sonora attiva');
+  } else {
+    Chiptune.stop();
+    toast('Colonna sonora in pausa');
+  }
+}
+
+/* ---------------------------------------------------------------------
+   STORICO — submenu / sheet a scomparsa
+   --------------------------------------------------------------------- */
+function fmtDateIt(key) {
+  return parseKey(key).toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' });
+}
+function bestZeroStreak(series) {
+  let best = 0, cur = 0;
+  for (const d of series) { if (d.count === 0) { cur++; if (cur > best) best = cur; } else cur = 0; }
+  return best;
+}
+function renderHistorySheet() {
+  const stats = computeStats(state);
+  const series = [...state.history, { date: state.todayKey, count: state.todayCount }];
+
+  // Riepilogo
+  const cards = [
+    [`${stats.giorniTotali}`, 'giorni tracciati'],
+    [stats.mediaGiornaliera.toFixed(2), 'media / giorno'],
+    [`${stats.totaleSessioni}`, 'sessioni totali'],
+    [`${bestZeroStreak(series)}g`, 'miglior pausa'],
+  ];
+  els.historySummary.innerHTML = '';
+  for (const [v, l] of cards) {
+    const c = document.createElement('div'); c.className = 'sheet__stat';
+    const b = document.createElement('b'); b.textContent = v;
+    const sp = document.createElement('span'); sp.textContent = l;
+    c.append(b, sp); els.historySummary.appendChild(c);
+  }
+
+  // Grafico (ultimi 14 giorni)
+  const chart = series.slice(-14);
+  const cmax = Math.max(1, ...chart.map((d) => d.count));
+  els.historyChartFull.innerHTML = '';
+  for (const d of chart) {
+    const bar = document.createElement('div');
+    bar.className = 'hbar' + (d.date === state.todayKey ? ' hbar--today' : '');
+    const fill = document.createElement('div'); fill.className = 'hbar__fill';
+    fill.style.height = `${Math.max(4, (d.count / cmax) * 100)}%`;
+    bar.appendChild(fill); bar.title = `${d.date}: ${d.count}`;
+    els.historyChartFull.appendChild(bar);
+  }
+
+  // Elenco giorni (dal più recente)
+  const lmax = Math.max(1, ...series.map((d) => d.count));
+  els.historyList.innerHTML = '';
+  for (const d of [...series].reverse()) {
+    const li = document.createElement('li');
+    li.className = 'dayrow' + (d.date === state.todayKey ? ' dayrow--today' : '');
+    const date = document.createElement('span'); date.className = 'dayrow__date'; date.textContent = fmtDateIt(d.date);
+    const bar = document.createElement('span'); bar.className = 'dayrow__bar';
+    const i = document.createElement('i'); i.style.width = `${Math.round((d.count / lmax) * 100)}%`; bar.appendChild(i);
+    const n = document.createElement('span'); n.className = 'dayrow__n'; n.textContent = String(d.count);
+    li.append(date, bar, n);
+    els.historyList.appendChild(li);
+  }
+}
+function openHistory() {
+  renderHistorySheet();
+  els.historySheet.setAttribute('aria-hidden', 'false');
+  haptic(8);
+}
+function closeHistory() {
+  els.historySheet.setAttribute('aria-hidden', 'true');
+}
+
+/* ---------------------------------------------------------------------
    AVVIO
    --------------------------------------------------------------------- */
 const state = loadState();
@@ -457,6 +562,15 @@ render(state);
 
 els.tapBtn.addEventListener('click', registraTocco);
 els.undoBtn.addEventListener('click', annullaTocco);
+
+// Controlli: colonna sonora + storico
+reflectSoundBtn();
+els.soundBtn.addEventListener('click', toggleSound);
+els.historyBtn.addEventListener('click', openHistory);
+els.historyCard.addEventListener('click', openHistory);
+els.historyCard.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHistory(); } });
+els.historySheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeHistory));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHistory(); });
 
 setInterval(tickRollover, 60 * 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tickRollover(); });

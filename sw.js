@@ -4,7 +4,7 @@
    con aggiornamento in background (stale-while-revalidate) per le risorse.
    ===================================================================== */
 
-const CACHE = 'botta-consapevole-v3';
+const CACHE = 'botta-consapevole-v5';
 
 // Percorsi relativi: l'app funziona anche servita da una sottocartella.
 const APP_SHELL = [
@@ -12,6 +12,7 @@ const APP_SHELL = [
   './index.html',
   './styles.css',
   './app.js',
+  './audio.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

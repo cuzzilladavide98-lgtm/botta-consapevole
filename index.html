@@ -65,11 +65,26 @@
     <header class="topbar glass">
       <div class="brand">
         <span class="brand__dot"></span>
-        <span class="brand__name">Botta&nbsp;Consapevole</span>
+        <span class="brand__name">Botta</span>
       </div>
-      <div class="precision" title="La stima si affina con i giorni di tracciamento">
-        <span class="precision__label" id="dayLabel">Giorno 1</span>
-        <div class="precision__bar"><i id="precisionFill" style="width:0%"></i></div>
+      <div class="topbar__right">
+        <button id="soundBtn" class="iconbtn" type="button" aria-label="Attiva la colonna sonora" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>
+            <path class="sw" d="M16 8.5a4.5 4.5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path class="sw" d="M18.6 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="historyBtn" class="iconbtn" type="button" aria-label="Apri lo storico">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/>
+          </svg>
+        </button>
+        <div class="precision" title="La stima si affina con i giorni di tracciamento">
+          <span class="precision__label" id="dayLabel">Giorno 1</span>
+          <div class="precision__bar"><i id="precisionFill" style="width:0%"></i></div>
+        </div>
       </div>
     </header>
 
@@ -94,10 +109,10 @@
       </div>
     </section>
 
-    <section class="history glass" aria-label="Storico giorni">
+    <section class="history glass" id="historyCard" role="button" tabindex="0" aria-label="Apri lo storico completo">
       <div class="history__head">
         <span>Storico</span>
-        <span class="history__legend" id="historyRange"></span>
+        <span class="history__more"><span class="history__legend" id="historyRange"></span><i class="chev" aria-hidden="true">›</i></span>
       </div>
       <div class="history__bars" id="historyBars"></div>
     </section>
@@ -138,6 +153,23 @@
   <div class="rotate-hint" aria-hidden="true">
     <span class="rotate-hint__ico"></span>
     Gira il telefono in verticale
+  </div>
+
+  <!-- ===== STORICO (submenu / sheet a scomparsa) ===== -->
+  <div class="sheet" id="historySheet" aria-hidden="true">
+    <div class="sheet__backdrop" data-close></div>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-label="Storico">
+      <div class="sheet__grab" data-close></div>
+      <header class="sheet__head">
+        <h2 class="sheet__title">Storico</h2>
+        <button class="iconbtn" id="sheetClose" type="button" aria-label="Chiudi" data-close>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </header>
+      <div class="sheet__summary" id="historySummary"></div>
+      <div class="sheet__chart" id="historyChartFull"></div>
+      <ul class="sheet__list" id="historyList"></ul>
+    </div>
   </div>
 
   <!-- ===== SPLASH DI LANCIO ===== -->

@@ -503,3 +503,68 @@ body[data-level="sublime"] .levelhead__name {
   .history__bars { height:42px; }
   .levelhead__hint { min-height:2.2em; }
 }
+
+/* =====================================================================
+   CONTROLLI TOPBAR (suono + storico) + STORICO SHEET (submenu)
+   ===================================================================== */
+.topbar__right { display:flex; align-items:center; gap:8px; }
+.iconbtn {
+  width:38px; height:38px; flex:0 0 auto; display:grid; place-items:center; padding:0;
+  border-radius:50%; border:.5px solid var(--glass-line); cursor:pointer;
+  background: color-mix(in srgb, var(--glass) 70%, transparent); color: var(--card-ink);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  transition: transform .14s var(--press), background-color var(--evolve) var(--ease-evolve), color var(--evolve) var(--ease-evolve);
+}
+.iconbtn:active { transform: scale(.9); }
+.iconbtn:focus-visible { outline:3px solid var(--text); outline-offset:2px; }
+/* stato suono: default OFF -> slash visibile, onde nascoste */
+#soundBtn .sw { opacity:0; transition:opacity .3s; }
+#soundBtn .slash { opacity:1; transition:opacity .3s; }
+#soundBtn.on .sw { opacity:1; }
+#soundBtn.on .slash { opacity:0; }
+#soundBtn.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+
+/* Storico inline: ora è un pulsante che apre il submenu */
+.history { cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition: transform .14s var(--press), background-color var(--evolve) var(--ease-evolve); }
+.history:active { transform: scale(.985); }
+.history__more { display:inline-flex; align-items:center; gap:6px; text-transform:none; letter-spacing:0; }
+.history .chev { font-size:18px; line-height:1; opacity:.7; }
+
+/* Sheet a scomparsa stile iOS */
+.sheet { position:fixed; inset:0; z-index:80; pointer-events:none; }
+.sheet[aria-hidden="false"] { pointer-events:auto; }
+.sheet__backdrop { position:absolute; inset:0; background:rgba(0,0,0,.45); opacity:0;
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); transition:opacity .45s var(--ease-evolve); }
+.sheet[aria-hidden="false"] .sheet__backdrop { opacity:1; }
+.sheet__panel {
+  position:absolute; left:0; right:0; bottom:0; max-height:86dvh; display:flex; flex-direction:column;
+  padding:10px calc(var(--safe-right) + 16px) calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px);
+  background: color-mix(in srgb, var(--bg-0) 80%, #000);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4); backdrop-filter:blur(24px) saturate(1.4);
+  border-top-left-radius:26px; border-top-right-radius:26px; border-top:.5px solid var(--glass-line);
+  box-shadow:0 -18px 50px -12px rgba(0,0,0,.5); color:var(--card-ink);
+  transform: translate3d(0,100%,0); transition: transform .5s var(--spring);
+}
+.sheet[aria-hidden="false"] .sheet__panel { transform: translate3d(0,0,0); }
+.sheet__grab { width:40px; height:5px; border-radius:99px; background:var(--card-ink); opacity:.3; margin:2px auto 10px; cursor:grab; }
+.sheet__head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.sheet__title { font-size:22px; font-weight:800; letter-spacing:-.3px; color:var(--text); }
+.sheet__summary { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:14px; }
+.sheet__stat { background: color-mix(in srgb, var(--glass) 55%, transparent); border:.5px solid var(--glass-line);
+  border-radius:14px; padding:10px 12px; display:grid; gap:2px; }
+.sheet__stat b { font-size:20px; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums; }
+.sheet__stat span { font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:var(--text-dim); }
+.sheet__chart { display:flex; align-items:flex-end; gap:4px; height:74px; margin-bottom:14px; padding:10px;
+  border-radius:14px; background: color-mix(in srgb, var(--glass) 40%, transparent); }
+.sheet__chart .hbar { flex:1 1 0; display:flex; align-items:flex-end; height:100%; }
+.sheet__chart .hbar__fill { width:100%; min-height:3px; border-radius:5px 5px 2px 2px; background:var(--accent); }
+.sheet__list { list-style:none; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:6px; }
+.dayrow { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:12px;
+  background: color-mix(in srgb, var(--glass) 45%, transparent); border:.5px solid var(--glass-line); }
+.dayrow__dot { width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+.dayrow__date { font-size:13px; font-weight:600; color:var(--text); min-width:5.5em; }
+.dayrow__bar { flex:1; height:6px; border-radius:99px; background:rgba(127,127,127,.25); overflow:hidden; }
+.dayrow__bar i { display:block; height:100%; background:var(--accent); border-radius:99px; }
+.dayrow__n { font-size:13px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; min-width:1.6em; text-align:right; }
+.dayrow--today { outline:1.5px solid var(--accent); }
