@@ -1,54 +1,90 @@
 /* =====================================================================
-   BOTTA CONSAPEVOLE — styles.css  ·  estetica "Bussola di Apple"
-   Nero elegante, linee sottili, tipografia leggera, un solo accento di
-   colore per livello (verde→rosso). Leggero: niente blur/blob/glitch.
-   Ottimizzato per iPhone 13 mini (360×780 pt), safe-area completa.
+   BOTTA CONSAPEVOLE — styles.css
+   La UI è un VIAGGIO dalla LUCE al BUIO, guidato dalla media dei consumi:
+   Eccellente = paradiso luminoso e vivo · Sublime = onirico · Standard = candy
+   → i colori sbiadiscono, il movimento rallenta → Terribile = buio rotto.
+   Cambia radicalmente sfondo, palette, inchiostro e micro-animazioni per livello.
    ===================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; height: 100%; overflow: hidden; }
 
 :root {
-  --bg: #07080b;
-  --ink: #ECECEE;
-  --dim: rgba(236,236,238,.55);
-  --faint: rgba(236,236,238,.30);
-  --hair: rgba(236,236,238,.14);
-  --hair-strong: rgba(236,236,238,.26);
-  --accent: #34d399;
+  /* default = Eccellente (luce) */
+  --bg-base: #e9fff4;
+  --glow: rgba(34,197,94,.20);
+  --ink: #0d3b2a;
+  --accent: #16a34a;
+  --mote: rgba(255,255,255,.9);
+  --life-dur: 7s;
+  --breath-dur: 5.5s;
+  --fray: 0;
 
   --ease: cubic-bezier(.22,.61,.36,1);
   --press: cubic-bezier(.25,1,.5,1);
-  --evolve: 1100ms;
+  --evolve: 1300ms;
 
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
-  color-scheme: dark;
 }
 
 body {
+  /* IMPORTANTE: i derivati stanno QUI (non in :root) così si ricalcolano
+     con l'--ink del livello corrente — altrimenti i testi secondari restano
+     del colore di Eccellente e spariscono sui fondi scuri. */
+  --dim: color-mix(in srgb, var(--ink) 82%, transparent);
+  --faint: color-mix(in srgb, var(--ink) 66%, transparent);
+  --hair: color-mix(in srgb, var(--ink) 24%, transparent);
+  --hair-strong: color-mix(in srgb, var(--ink) 44%, transparent);
+
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
   color: var(--ink);
-  background: var(--bg);
+  background: var(--bg-base);
+  width: 100%; height: 100%;
   min-height: 100vh; min-height: 100dvh;
   position: fixed; inset: 0; overflow: hidden;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none; user-select: none;
-  overscroll-behavior: none;
-  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+  overscroll-behavior: none; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  transition: background-color var(--evolve) var(--ease), color var(--evolve) var(--ease);
 }
 
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
 
-/* Sfondo: un'unica, tenue aura d'accento (statica, leggerissima) */
-.bg {
+/* ---- Atmosfera + vita (decoro che cambia mood) ---- */
+.scene {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(60% 46% at 50% 36%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%);
-  transition: background var(--evolve) var(--ease);
+  background:
+    radial-gradient(90% 60% at 50% 22%, var(--glow), transparent 70%),
+    radial-gradient(70% 50% at 50% 100%, var(--glow), transparent 75%);
+  transition: background var(--evolve) var(--ease), opacity var(--evolve) var(--ease);
+}
+.garden { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.mote {
+  position:absolute; width:14px; height:14px; border-radius:50%;
+  background: radial-gradient(circle, var(--mote) 0%, transparent 70%);
+  opacity:0; will-change: transform, opacity;
+  animation: drift var(--life-dur, 8s) var(--ease) infinite;
+}
+@keyframes drift {
+  0%   { transform: translate3d(0, 24px, 0) scale(.7); opacity:0; }
+  18%  { opacity:.75; }
+  82%  { opacity:.45; }
+  100% { transform: translate3d(0, -70px, 0) scale(1.15); opacity:0; }
+}
+.m1{left:14%; top:64%;}                 .m2{left:80%; top:58%; width:10px; height:10px; animation-delay:1.4s;}
+.m3{left:30%; top:74%; width:18px; height:18px; animation-delay:2.6s;} .m4{left:66%; top:70%; animation-delay:.8s;}
+.m5{left:48%; top:60%; width:9px; height:9px; animation-delay:3.4s;}   .m6{left:88%; top:78%; width:12px; height:12px; animation-delay:2s;}
+.m7{left:22%; top:50%; width:8px; height:8px; animation-delay:4.2s;}
+
+/* Velatura in cima: tiene leggibili le icone bianche della status bar
+   (black-translucent) su OGNI livello, anche i più chiari. Costante e sottile. */
+.topscrim {
+  position:fixed; top:0; left:0; right:0; z-index:110; pointer-events:none;
+  height: calc(var(--safe-top) + 10px);
+  background: linear-gradient(180deg, rgba(0,0,0,.32), rgba(0,0,0,0));
 }
 
 /* =====================================================================
@@ -56,7 +92,7 @@ body {
    ===================================================================== */
 .app {
   position: relative; z-index: 1;
-  height: 100dvh;
+  height: 100dvh; max-height: 100dvh; overflow: hidden;
   display: grid;
   grid-template-rows: auto 1fr auto;
   padding:
@@ -69,211 +105,261 @@ body {
 
 /* ---- Topbar ---- */
 .topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.brand { font-size:11px; font-weight:600; letter-spacing:3px; color:var(--dim); }
-.day { display:flex; flex-direction:column; align-items:flex-end; gap:5px; min-width:0; }
-.day #dayLabel { font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; white-space:nowrap; }
-.prec { display:block; width:54px; height:1.5px; background:var(--hair); border-radius:2px; overflow:hidden; }
-.prec > i { display:block; height:100%; width:0%; background:var(--accent);
-  transition: width .8s var(--press), background-color var(--evolve) var(--ease); }
-
-.iconbtn {
-  width:34px; height:34px; flex:0 0 auto; display:grid; place-items:center; padding:0;
-  border:none; background:none; color:var(--dim); cursor:pointer;
-  transition: color .25s, transform .14s var(--press);
-}
+.brand { font-size:11px; font-weight:700; letter-spacing:3px; color:var(--dim); }
+.day { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.day #dayLabel { font-size:11px; font-weight:600; letter-spacing:1.4px; color:var(--dim); text-transform:uppercase; white-space:nowrap; }
+.prec { display:block; width:54px; height:2px; background:var(--hair); border-radius:2px; overflow:hidden; }
+.prec > i { display:block; height:100%; width:0%; background:var(--accent); transition: width .8s var(--press), background-color var(--evolve) var(--ease); }
+.iconbtn { width:34px; height:34px; flex:0 0 auto; display:grid; place-items:center; padding:0; border:none; background:none; color:var(--dim); cursor:pointer; transition: color .25s, transform .14s var(--press); }
 .iconbtn:active { transform:scale(.88); }
 .iconbtn:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:8px; }
 
-/* ---- Hero centrale (lo strumento) ---- */
-.hero { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(14px, 3.2vh, 30px); }
-
-.level { display:grid; gap:7px; }
+/* ---- Hero ---- */
+.hero { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(16px, 3.4vh, 32px); }
+.level { display:grid; gap:8px; }
 .level__name {
-  font-size:13px; font-weight:600; letter-spacing:4px; text-transform:uppercase;
-  color:var(--accent); transition: color var(--evolve) var(--ease);
+  font-size:13px; font-weight:700; letter-spacing:4px; text-transform:uppercase; color:var(--accent);
+  transition: color var(--evolve) var(--ease); will-change:transform;
+  text-shadow:
+    calc(var(--fray,0) * 2px) 0 rgba(255,70,90, calc(var(--fray,0) * .7)),
+    calc(var(--fray,0) * -2px) 0 rgba(70,200,255, calc(var(--fray,0) * .7));
+  animation: fray 2.4s steps(2,end) infinite;
 }
-.level__hint { font-size:12.5px; line-height:1.45; color:var(--dim); max-width:30ch; margin:0 auto; min-height:2.7em; }
+@keyframes fray {
+  0%,100% { transform: translate3d(0,0,0); }
+  20% { transform: translate3d(calc(var(--fray,0) * -1.2px), 0, 0); }
+  40% { transform: translate3d(calc(var(--fray,0) * 1px), calc(var(--fray,0) * -.6px), 0); }
+  60% { transform: translate3d(calc(var(--fray,0) * -.6px), calc(var(--fray,0) * .6px), 0); }
+  80% { transform: translate3d(calc(var(--fray,0) * 1.2px), 0, 0); }
+}
+.level__hint {
+  font-size:12.5px; line-height:1.45; color:var(--dim); max-width:30ch; margin:0 auto; min-height:2.7em;
+  filter: blur(calc(var(--fray,0) * .5px)); opacity: calc(1 - var(--fray,0) * .16);
+  transition: filter var(--evolve) var(--ease), opacity var(--evolve) var(--ease), color var(--evolve) var(--ease);
+}
 
-/* ---- Quadrante (dial) ---- */
+/* ---- Pulse (il numero è il cuore) ---- */
 .dialwrap { display:grid; place-items:center; }
-.dial {
-  position:relative; width:min(62vw, 248px); aspect-ratio:1; border:none; background:none;
-  display:grid; place-items:center; cursor:pointer; color:inherit;
-  -webkit-appearance:none; appearance:none;
+.pulse {
+  position:relative; width:min(58vw, 232px); aspect-ratio:1; border:none; background:none;
+  display:grid; place-items:center; cursor:pointer; color:inherit; -webkit-appearance:none; appearance:none;
+  transition: transform .14s var(--press);
 }
-.dial__ticks {
-  position:absolute; inset:0; border-radius:50%;
-  background: repeating-conic-gradient(from -90deg, var(--hair-strong) 0 .5deg, transparent .5deg 6deg);
-  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
-          mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
-}
-.dial__ticks::after {
-  content:""; position:absolute; inset:0; border-radius:50%;
-  background: repeating-conic-gradient(from -90deg, color-mix(in srgb, var(--accent) 65%, #fff) 0 1deg, transparent 1deg 30deg);
-  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 20px), #000 calc(100% - 19px));
-          mask: radial-gradient(closest-side, transparent calc(100% - 20px), #000 calc(100% - 19px));
+.pulse:active { transform:scale(.97); }
+/* alone vivo dietro al numero: respira; il tempo accelera col degrado */
+.pulse::before {
+  content:""; position:absolute; inset:-4%; border-radius:50%; z-index:0;
+  background: radial-gradient(circle at 50% 50%,
+    color-mix(in srgb, var(--accent) 38%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 14%, transparent) 42%, transparent 70%);
+  animation: breathe var(--breath-dur, 5s) var(--ease) infinite;
   transition: background var(--evolve) var(--ease);
 }
-.dial__ring {
-  position:absolute; inset:8%; border-radius:50%; border:1px solid var(--hair);
-}
-/* indicatore "nord" d'accento, lento respiro */
-.dial__ring::before {
-  content:""; position:absolute; top:-4px; left:50%; transform:translateX(-50%);
-  width:7px; height:7px; border-radius:50%; background:var(--accent);
-  box-shadow:0 0 10px var(--accent); animation: northPulse 3.4s var(--ease) infinite;
-  transition: background-color var(--evolve) var(--ease);
-}
-@keyframes northPulse { 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
-
-.dial__count {
-  position:relative; z-index:2; font-size:clamp(62px, 22vw, 96px); font-weight:200; letter-spacing:-2px;
+@keyframes breathe { 0%,100%{ transform:scale(.92); opacity:.8; } 50%{ transform:scale(1.07); opacity:1; } }
+.pulse__count {
+  position:relative; z-index:2; font-size:clamp(70px, 25vw, 108px); font-weight:200; letter-spacing:-3px;
   line-height:1; color:var(--ink); font-variant-numeric:tabular-nums;
+  text-shadow:
+    calc(var(--fray,0) * 1.5px) 0 rgba(255,70,90, calc(var(--fray,0) * .5)),
+    calc(var(--fray,0) * -1.5px) 0 rgba(70,200,255, calc(var(--fray,0) * .5));
+  transition: color var(--evolve) var(--ease), text-shadow var(--evolve) var(--ease);
 }
-.dial__unit { position:relative; z-index:2; margin-top:6px; font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--faint); }
+.pulse__unit { position:relative; z-index:2; margin-top:8px; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--faint); }
+.pulse__fx { position:absolute; inset:0; z-index:1; pointer-events:none; }
+.tap-ring { position:absolute; inset:8%; border-radius:50%; border:1.5px solid color-mix(in srgb, var(--accent) 75%, var(--ink)); }
 
-.dial:active { transform:scale(.975); }
-.dial { transition: transform .12s var(--press); }
-
-/* FX tocco: un solo anello elegante che si espande (niente particelle) */
-.dial__fx { position:absolute; inset:0; z-index:1; pointer-events:none; }
-.tap-ring {
-  position:absolute; inset:8%; border-radius:50%; border:1.5px solid var(--accent);
-}
-
-/* ---- Riga ultima sessione ---- */
-.last { font-size:12px; color:var(--dim); letter-spacing:.2px; }
-
-/* ---- Stats (figure essenziali) ---- */
+/* ---- Ultima sessione + stats ---- */
+.last { font-size:12px; color:var(--dim); letter-spacing:.2px; transition: color var(--evolve) var(--ease); }
+/* timer dell'effetto (3h40m) — parte/riparte a ogni sessione */
+.effect { display:none; align-items:center; justify-content:center; gap:7px;
+  font-size:13px; font-weight:600; letter-spacing:.4px; color:var(--accent);
+  font-variant-numeric:tabular-nums; min-height:1.2em; transition: color var(--evolve) var(--ease); }
+.effect::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--accent);
+  box-shadow:0 0 8px var(--accent); animation: effectPulse 1.6s var(--ease) infinite; }
+@keyframes effectPulse { 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
 .stats { display:flex; align-items:center; justify-content:center; gap:16px; }
 .stats > span:not(.sep) { display:grid; gap:3px; }
-.stats b { font-size:17px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; }
+.stats b { font-size:17px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; transition: color var(--evolve) var(--ease); }
 .stats i { font-size:9.5px; font-style:normal; letter-spacing:1.2px; text-transform:uppercase; color:var(--faint); }
 .sep { width:1px; height:26px; background:var(--hair); }
+/* suggerimento "per risalire di livello" */
+.suggest { font-size:11.5px; font-weight:600; line-height:1.4; color:var(--accent); max-width:32ch;
+  margin:4px auto 0; min-height:1.2em; transition: color var(--evolve) var(--ease); }
+/* badge verde "oggi pulito": sempre leggibile (pillola autonoma) a ogni livello */
+.climb { display:none; align-items:center; justify-content:center; justify-self:center; gap:6px;
+  background:#15803d; color:#fff; font-size:11px; font-weight:700; letter-spacing:.7px; text-transform:uppercase;
+  padding:4px 13px; border-radius:99px; margin:2px auto 0; box-shadow:0 4px 14px -6px rgba(21,128,61,.6); }
 
 /* ---- Fascia inferiore ---- */
 .bottom { display:flex; flex-direction:column; align-items:center; gap:14px; }
-
 .histline { width:100%; max-width:340px; display:grid; gap:8px; }
 .histline__head { display:flex; justify-content:space-between; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--faint); }
 .histline__bars { display:flex; align-items:flex-end; gap:3px; height:30px; }
 .hbar { flex:1 1 0; display:flex; align-items:flex-end; height:100%; }
-.hbar__fill { width:100%; min-height:2px; border-radius:2px; background:var(--hair-strong);
-  transition: height .6s var(--press), background-color var(--evolve) var(--ease); }
+.hbar__fill { width:100%; min-height:2px; border-radius:2px; background:var(--hair-strong); transition: height .6s var(--press), background-color var(--evolve) var(--ease); }
 .hbar--today .hbar__fill { background:var(--accent); }
 .hbar__day { display:none; }
-
 .undo {
-  display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  min-height:46px; min-width:130px; padding:0 22px; border-radius:99px;
-  font-size:14px; font-weight:500; letter-spacing:.2px;
-  color:var(--ink); background:transparent; border:1px solid var(--hair-strong); cursor:pointer;
-  transition: opacity .3s, transform .14s var(--press), border-color .25s;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:46px; min-width:130px;
+  padding:0 22px; border-radius:99px; font-size:14px; font-weight:600; color:var(--ink);
+  background:transparent; border:1px solid var(--hair-strong); cursor:pointer;
+  transition: opacity .3s, transform .14s var(--press), border-color var(--evolve) var(--ease), color var(--evolve) var(--ease);
 }
 .undo:active { transform:scale(.96); }
 .undo:disabled { opacity:.3; pointer-events:none; }
 .undo svg { width:16px; height:16px; }
-
 .foot { font-size:10px; color:var(--faint); letter-spacing:.3px; }
 
-/* ---- Toast ---- */
+/* ---- Toast (sempre scuro, leggibile su ogni livello) ---- */
 .toast {
   position:fixed; left:50%; bottom:calc(var(--safe-bottom) + 84px); transform:translate3d(-50%,16px,0);
-  z-index:30; background:rgba(20,20,24,.86); color:#fff; font-size:13px; font-weight:500;
+  z-index:30; background:rgba(18,18,22,.9); color:#fff; font-size:13px; font-weight:500;
   padding:10px 18px; border-radius:99px; opacity:0; pointer-events:none; max-width:80vw;
-  border:1px solid var(--hair); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
   transition: opacity .3s var(--ease), transform .4s var(--press);
 }
 .toast.show { opacity:1; transform:translate3d(-50%,0,0); }
 
 /* =====================================================================
-   ACCENTO PER LIVELLO (verde elegante → rosso). L'unico colore in scena.
+   I 7 LIVELLI — viaggio dalla luce al buio (cambio RADICALE)
    ===================================================================== */
-body[data-level="eccellente"]   { --accent:#34d399; }
-body[data-level="sublime"]      { --accent:#2dd4bf; }
-body[data-level="standard"]     { --accent:#a3e635; }
-body[data-level="abitudinario"] { --accent:#fbbf24; }
-body[data-level="hard"]         { --accent:#fb923c; }
-body[data-level="inutile"]      { --accent:#f87171; }
-body[data-level="terribile"]    { --accent:#ef4444; }
+body[data-level="eccellente"] {
+  --bg-base:#e9fff4; --glow:rgba(34,197,94,.20); --ink:#0d3b2a; --accent:#0b7a3e;
+  --mote:rgba(255,255,255,.95); --life-dur:7s; --breath-dur:5.5s; --fray:0;
+}
+body[data-level="sublime"] {
+  --bg-base:#f4e7ff; --glow:rgba(168,85,247,.20); --ink:#3d1170; --accent:#7b1fa2;
+  --mote:rgba(255,210,250,.95); --life-dur:6s; --breath-dur:4.6s; --fray:0;
+}
+body[data-level="standard"] {
+  --bg-base:#ffe9d4; --glow:rgba(244,63,94,.16); --ink:#6e2433; --accent:#be123c;
+  --mote:rgba(255,240,210,.95); --life-dur:6.5s; --breath-dur:4.2s; --fray:.12;
+}
+body[data-level="abitudinario"] {
+  --bg-base:#d7d3ca; --glow:rgba(110,95,58,.14); --ink:#332e26; --accent:#5f5230;
+  --mote:rgba(120,110,90,.4); --life-dur:11s; --breath-dur:3.6s; --fray:.38;
+}
+body[data-level="hard"] {
+  --bg-base:#9aa0a8; --glow:rgba(35,43,52,.16); --ink:#1c2026; --accent:#232b34;
+  --mote:rgba(40,46,54,.32); --life-dur:15s; --breath-dur:2.8s; --fray:.6;
+}
+body[data-level="inutile"] {
+  --bg-base:#3a3d43; --glow:rgba(215,154,160,.18); --ink:#e7e8eb; --accent:#d79aa0;
+  --mote:rgba(210,200,205,.32); --life-dur:20s; --breath-dur:2.1s; --fray:.88;
+}
+body[data-level="terribile"] {
+  --bg-base:#0b0a0d; --glow:rgba(255,90,90,.22); --ink:#ddccd1; --accent:#ff5a5a;
+  --mote:rgba(255,90,90,.4); --life-dur:5s; --breath-dur:1.4s; --fray:1.25;
+}
+/* a Terribile le "particelle di vita" cadono e si spezzano */
+body[data-level="terribile"] .mote { animation: deadFall var(--life-dur,5s) steps(5,end) infinite; }
+@keyframes deadFall {
+  0% { transform: translate3d(0,-30px,0) scale(1); opacity:.5; }
+  100% { transform: translate3d(6px, 50px, 0) scale(.5); opacity:0; }
+}
 
 /* =====================================================================
-   STORICO / BACKUP — sheet a scomparsa minimale
+   DATI E BACKUP — sheet (tema scuro fisso, leggibile su ogni livello)
    ===================================================================== */
 .sheet { position:fixed; inset:0; z-index:80; pointer-events:none; }
 .sheet[aria-hidden="false"] { pointer-events:auto; }
-.sheet__backdrop { position:absolute; inset:0; background:rgba(0,0,0,.55); opacity:0;
-  transition:opacity .4s var(--ease); }
+.sheet__backdrop { position:absolute; inset:0; background:rgba(0,0,0,.5); opacity:0; transition:opacity .4s var(--ease); }
 .sheet[aria-hidden="false"] .sheet__backdrop { opacity:1; }
 .sheet__panel {
   position:absolute; left:0; right:0; bottom:0; max-height:88dvh; display:flex; flex-direction:column;
-  overflow-y:auto; overscroll-behavior:contain;
+  overflow-y:auto; overscroll-behavior:contain; color:#ECECEE;
   padding:10px calc(var(--safe-right) + 18px) calc(max(var(--safe-bottom),10px) + 16px) calc(var(--safe-left) + 18px);
-  background:#0e0f13; border-top:1px solid var(--hair);
+  background:#111216; border-top:1px solid rgba(255,255,255,.12);
   border-top-left-radius:24px; border-top-right-radius:24px;
   transform: translate3d(0,100%,0); transition: transform .45s var(--press);
 }
 .sheet[aria-hidden="false"] .sheet__panel { transform: translate3d(0,0,0); }
-.sheet__grab { width:38px; height:5px; border-radius:99px; background:var(--hair-strong); margin:2px auto 12px; cursor:grab; }
+.sheet__grab { width:38px; height:5px; border-radius:99px; background:rgba(255,255,255,.28); margin:2px auto 12px; }
 .sheet__head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.sheet__title { font-size:20px; font-weight:600; letter-spacing:-.2px; color:var(--ink); }
-
+.sheet__title { font-size:20px; font-weight:600; color:#fff; }
+.sheet__head .iconbtn { color:rgba(255,255,255,.7); }
 .sheet__summary { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
-.sheet__stat { display:grid; gap:3px; padding:10px 6px; border-radius:12px; border:1px solid var(--hair);
-  background:rgba(255,255,255,.02); }
-.sheet__stat b { font-size:18px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; }
-.sheet__stat span { font-size:9.5px; letter-spacing:.6px; text-transform:uppercase; color:var(--faint); }
-
+.sheet__stat { display:grid; gap:3px; padding:10px 6px; border-radius:12px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.03); }
+.sheet__stat b { font-size:18px; font-weight:500; color:#fff; font-variant-numeric:tabular-nums; }
+.sheet__stat span { font-size:9.5px; letter-spacing:.6px; text-transform:uppercase; color:rgba(255,255,255,.5); }
 .sheet__sect { margin-bottom:18px; }
-.sheet__lbl { font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:var(--dim); margin:0 0 9px; }
-.sheet__note { font-size:11.5px; color:var(--faint); margin-top:8px; line-height:1.45; }
+.sheet__lbl { font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:rgba(255,255,255,.6); margin:0 0 9px; }
+.sheet__note { font-size:11.5px; color:rgba(255,255,255,.4); margin-top:8px; line-height:1.45; }
 .btnrow { display:flex; gap:8px; }
 .bigbtn {
   flex:1; min-height:48px; border-radius:14px; cursor:pointer; border:1px solid transparent;
-  font-size:14px; font-weight:600; color:#06120d; background:var(--accent);
-  display:inline-flex; align-items:center; justify-content:center; gap:6px;
-  transition: transform .14s var(--press), filter .2s;
+  font-size:14px; font-weight:600; color:#0b0b0b; background:var(--accent);
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; transition: transform .14s var(--press);
 }
 .bigbtn:active { transform:scale(.96); }
-.bigbtn--ghost { background:transparent; color:var(--ink); border-color:var(--hair-strong); }
+.bigbtn--ghost { background:transparent; color:#fff; border-color:rgba(255,255,255,.25); }
 .bigbtn--danger { background:transparent; color:#f87171; border-color:rgba(248,113,113,.5); width:100%; margin-top:10px; }
-.filelabel {
-  display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:46px;
-  padding:0 16px; border-radius:14px; border:1px dashed var(--hair-strong); cursor:pointer;
-  color:var(--ink); font-size:14px; font-weight:500; background:rgba(255,255,255,.02);
-}
-.importbox {
-  width:100%; margin-top:10px; min-height:68px; max-height:120px; resize:none; border-radius:14px;
-  border:1px solid var(--hair); background:rgba(0,0,0,.35); color:var(--ink);
-  font-size:12.5px; font-family:ui-monospace, Menlo, monospace; padding:10px 12px;
-  -webkit-user-select:text; user-select:text;
-}
-.sheet__status { font-size:13px; font-weight:500; color:var(--accent); min-height:1.3em; text-align:center; margin-top:2px; }
+.filelabel { display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:46px; padding:0 16px; border-radius:14px; border:1px dashed rgba(255,255,255,.25); cursor:pointer; color:#fff; font-size:14px; font-weight:500; background:rgba(255,255,255,.03); }
+.importbox { width:100%; margin-top:10px; min-height:68px; max-height:120px; resize:none; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.4); color:#fff; font-size:12.5px; font-family:ui-monospace, Menlo, monospace; padding:10px 12px; -webkit-user-select:text; user-select:text; }
+.sheet__status { font-size:13px; font-weight:600; color:var(--accent); min-height:1.3em; text-align:center; margin-top:2px; }
 
 /* =====================================================================
-   SPLASH minimale
+   INGRESSO — "una parola per entrare" (voce di dizionario, luce paradiso)
+   Il tocco per entrare avvia la musica (gesto richiesto da iOS) e intanto si impara.
    ===================================================================== */
-.splash {
-  position:fixed; inset:0; z-index:100; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:18px; background:var(--bg);
-  transition: opacity .55s var(--ease);
+.gate {
+  position:fixed; inset:0; z-index:100; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; text-align:center;
+  padding: calc(var(--safe-top) + 30px) 30px calc(var(--safe-bottom) + 30px);
+  background:#e9fff4; color:#0d3b2a; transition: opacity .6s var(--ease), transform .6s var(--ease);
+  animation: gateIn .6s var(--ease) both;
 }
-.splash.hide { opacity:0; pointer-events:none; }
-.splash__ring { width:64px; height:64px; border-radius:50%; border:1.5px solid var(--hair);
-  border-top-color:var(--accent); animation: spin 1s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.splash__word { font-size:11px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:var(--dim); }
+.gate.hide { opacity:0; transform:scale(1.06); pointer-events:none; }
+.gate:focus-visible { outline:none; }
+@keyframes gateIn { from{ opacity:0; } to{ opacity:1; } }
+.gate__inner { max-width:34ch; display:grid; gap:12px; animation: wordIn .8s var(--ease) .1s both; }
+@keyframes wordIn { from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none;} }
+.gate__kicker { font-size:10.5px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:rgba(13,59,42,.45); }
+.gate__word {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-weight:600; font-size:clamp(34px, 11vw, 48px); line-height:1.05; letter-spacing:-.5px; color:#0d3b2a;
+}
+.gate__pos { font-style:italic; font-size:13px; color:#16a34a; }
+.gate__def {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size:16px; line-height:1.5; color:#1d4a38;
+}
+.gate__etim { font-size:12px; line-height:1.5; color:rgba(13,59,42,.55); font-style:italic; }
+.gate__hint {
+  position:absolute; left:0; right:0; bottom:calc(var(--safe-bottom) + 26px);
+  font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:rgba(13,59,42,.42);
+  animation: hintPulse 2.4s var(--ease) infinite;
+}
+@keyframes hintPulse { 0%,100%{ opacity:.4; } 50%{ opacity:.9; } }
+/* modo "passo del Tao": il brano diventa il protagonista */
+.gate--tao .gate__word { display:none; }
+.gate--tao .gate__kicker { color:#16a34a; }
+.gate--tao .gate__def {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: clamp(18px, 5.2vw, 22px); line-height:1.55; color:#163322; max-width:31ch; margin:0 auto;
+}
+.gate--tao .gate__etim { margin-top:4px; }
+/* link alla voce Treccani (modo parola, online) */
+.gate__link {
+  display:inline-block; margin-top:6px; font-style:normal; font-size:12.5px; font-weight:600;
+  color:#16a34a; text-decoration:none; border-bottom:1px solid rgba(22,163,74,.4); padding-bottom:1px;
+}
+.gate__link:active { opacity:.6; }
 
 /* =====================================================================
    ACCESSIBILITÀ
    ===================================================================== */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.2s !important; }
+  *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.25s !important; }
   .splash { display:none !important; }
 }
-
-@media (max-height: 700px) {
-  .hero { gap:14px; }
-  .dial { width:min(50vw, 188px); }
-  .level__hint { min-height:2.2em; }
+/* iPhone 13 mini (≈780px) e affini: comprime per far stare tutto senza scroll */
+@media (max-height: 820px) {
+  .app { padding-top: calc(var(--safe-top) + 8px); }
+  .hero { gap: 12px; }
+  .pulse { width:min(48vw, 184px); }
+  .pulse__count { font-size: clamp(56px, 20vw, 84px); }
+  .level__hint { min-height:2.2em; font-size:12px; }
+  .stats b { font-size:16px; }
+  .bottom { gap:10px; }
 }
